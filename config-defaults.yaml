@@ -1,0 +1,31 @@
+
+cut_point:
+  desc: Specify the model cut point
+  value: !!int 2
+lr:
+  desc: learning rate
+  value: !!float 0.001
+percent:
+  desc: Proportion of data set used for training
+  value: !!float 1
+batch_size:
+  desc: batch size
+  value: !!int 64
+global_round:
+  desc: global training round
+  value: !!int 100
+local_epoch:
+  desc: local iteration epoch
+  value: !!int 2
+add_gan:
+  desc: use discriminator or not
+  value: !!bool False
+k:
+  desc: discriminator update round
+  value: !!int 1
+target_domain:
+  desc: target domain
+  value: !!int 0
+ratio_gan:
+  desc: weight of gradient back propagated from discriminator
+  value: !!float 0.2

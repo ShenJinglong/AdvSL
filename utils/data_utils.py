@@ -1,6 +1,7 @@
 
 import os
 from random import shuffle
+from typing import List
 import numpy as np
 import torch
 import torchvision
@@ -8,6 +9,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 
 class DigitsDataset(Dataset):
+    # https://github.com/med-air/FedBN/blob/master/utils/data_utils.py
     def __init__(self, data_path, channels, percent=0.1, filename=None, train=True, transform=None):
         if filename is None:
             if train:
@@ -52,7 +54,11 @@ class DigitsDataset(Dataset):
         return image, label
 
 class DatasetManager():
-    def __init__(self, path, percent, batch_size) -> None:
+    def __init__(self,
+        path: str,
+        percent: float,
+        batch_size: float
+    ) -> None:
         self.datasets = ["MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M"]
         channels = [1, 3, 1, 3, 3]
         transforms = [
@@ -109,13 +115,17 @@ class DatasetManager():
             ) for name, channel, transform in zip(self.datasets, channels, transforms)
         }
 
-    def get_trainloaders(self, names):
+    def get_trainloaders(self,
+        names: List[str]
+    ) -> List[torch.utils.data.DataLoader]:
         trainloaders = []
         for name in names:
             trainloaders.append(self.__trainloaders[name])
         return trainloaders
 
-    def get_testloaders(self, names):
+    def get_testloaders(self,
+        names: List[str]
+    ) -> List[torch.utils.data.DataLoader]:
         testloaders = []
         for name in names:
             testloaders.append(self.__testloaders[name])

@@ -59,7 +59,11 @@ class ResNet18_Mnist(torch.nn.Module):
         self.block_num = len(self.__blocks)
         self.__initialize_weights()
 
-    def forward(self, x, start=0, stop=10):
+    def forward(self,
+        x: torch.Tensor,
+        start: int = 0,
+        stop: int = 10
+    ):
         for block in self.__blocks[start:stop]:
             x = block(x)
         return x

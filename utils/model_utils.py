@@ -34,3 +34,18 @@ def eval_model(client_model: torch.nn.Module, server_model: torch.nn.Module, tes
     client_model.train()
     server_model.train()
     return correct / total
+
+def ratio_model_grad(model: torch.nn.Module, ratio: float) -> None:
+    for p in model.parameters():
+        p.grad *= ratio
+
+if __name__ == "__main__":
+    model = torch.nn.Linear(1, 1, bias=False)
+    input = torch.ones((1, 1))
+    output = model(input)
+    output.backward()
+    for p in model.parameters():
+        print(p.grad)
+    ratio_model_grad(model, 0.6)
+    for p in model.parameters():
+        print(p.grad)

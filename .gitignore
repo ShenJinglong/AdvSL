@@ -132,4 +132,5 @@ dmypy.json
 datasets/
 images/
 data/
+wandb/
 GAN.py
