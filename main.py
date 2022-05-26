@@ -1,5 +1,4 @@
 
-import enum
 import wandb
 import torch
 import torchvision
