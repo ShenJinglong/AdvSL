@@ -1,12 +1,12 @@
 
 cut_point:
-  desc: Specify the model cut point
+  desc: specify the model cut point
   value: !!int 2
 lr:
   desc: learning rate
   value: !!float 0.001
 percent:
-  desc: Proportion of data set used for training
+  desc: proportion of data set used for training
   value: !!float 1
 batch_size:
   desc: batch size
@@ -19,12 +19,12 @@ local_epoch:
   value: !!int 2
 add_gan:
   desc: use discriminator or not
-  value: !!bool False
+  value: !!bool True
 k:
   desc: discriminator update round
   value: !!int 1
 target_domain:
-  desc: target domain
+  desc: target domain (select a client as target domain, and the number here indicate client index)
   value: !!int 0
 ratio_gan:
   desc: weight of gradient back propagated from discriminator

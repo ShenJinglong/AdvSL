@@ -2,7 +2,7 @@ program: main.py
 project: GanSFL
 entity: sjinglong
 method: grid
-name: GanSFL vs SFL
+name: alg
 parameters:
   add_gan:
     values: [True, False]

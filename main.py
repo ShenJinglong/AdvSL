@@ -20,8 +20,10 @@ wandb.init(
 ) # 我们使用wandb对仿真的参数和数据进行管理，并进行可视化
 config = wandb.config
 if config.add_gan:
+    alg = "GanSFL"
     logging.info("@@ GanSFL")
 else:
+    alg = "SFL"
     logging.info("@@ SFL")
 
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -101,7 +103,7 @@ if __name__ == "__main__":
         # 将各个用户最后一个 batch 的第一个样本计算得到的 feature map 保存起来，用来观察 gan 对 feature map 的影响
         # 图像保存在images文件夹下，每个 round 保存一张
         # 图像中，每一行表示对应用户输出的各层 feature map；每一列表示 feature map 对应 channel 在不同用户上的区别
-        torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{round}.png", nrow=fm_size[1], normalize=True)
+        torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{alg}/{round}.png", nrow=fm_size[1], normalize=True)
 
         # 聚合模型
         client_globalmodel = aggregate_model(client_localmodels, [0.2, 0.2, 0.2, 0.2, 0.2])

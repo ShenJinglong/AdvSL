@@ -1,0 +1,8 @@
+program: main.py
+project: GanSFL
+entity: sjinglong
+method: grid
+name: percent
+parameters:
+  percent:
+    values: [0.1, 0.3, 0.5, 0.7, 1]
