@@ -8,6 +8,7 @@ from model.resnet import ResNet18_Mnist
 from model.gan import Discriminator
 from utils.data_utils import DatasetManager
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad
+from utils.hardware_utils import get_free_gpu
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +26,7 @@ else:
     alg = "SFL"
     logging.info("@@ SFL")
 
-DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
 
 # 准备数据集
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
