@@ -19,14 +19,14 @@ wandb.init(
     entity="sjinglong"
 ) # 我们使用wandb对仿真的参数和数据进行管理，并进行可视化
 config = wandb.config
+DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
 if config.add_gan:
     alg = "GanSFL"
-    logging.info("@@ GanSFL")
+    logging.info(f"@@ GanSFL [{DEVICE}]")
 else:
     alg = "SFL"
-    logging.info("@@ SFL")
+    logging.info(f"@@ SFL [{DEVICE}]")
 
-DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
 
 # 准备数据集
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
