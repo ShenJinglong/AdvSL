@@ -2,7 +2,7 @@ program: main.py
 project: GanSFL
 entity: sjinglong
 method: grid
-name: targetdomain
+name: k
 parameters:
-  target_domain:
-    values: [0, 1]
+  k:
+    values: [0.2, 0.25, 0.4, 0.5, 1, 2, 3, 4]
