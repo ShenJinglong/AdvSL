@@ -29,9 +29,10 @@ else:
 
 
 # 准备数据集
+datasets = ["MNIST", "MNIST_M"]
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
-trainloaders = dataset_manager.get_trainloaders(dataset_manager.datasets)
-testloaders = dataset_manager.get_testloaders(dataset_manager.datasets)
+trainloaders = dataset_manager.get_trainloaders(datasets)
+testloaders = dataset_manager.get_testloaders(datasets)
 
 # 准备模型
 global_model = ResNet18_Mnist().to(DEVICE)
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         # 下发模型
         [model.load_state_dict(server_globalmodel.state_dict()) for model in server_localmodels] # 将 server globalmodel 加载到 server localmodels 里边
         [model.load_state_dict(client_globalmodel.state_dict()) for model in client_localmodels] # 将 client globalmodel 加载到 client localmodels 里边
+        gan_update_counter = 0
 
         # training
         for epoch in range(config.local_epoch):
@@ -74,18 +76,23 @@ if __name__ == "__main__":
                 feature_maps = [client_localmodel(sample) for client_localmodel, sample in zip(client_localmodels, samples)] # 各个 client 输出 feature map
 
                 if config.add_gan:
-                    # 设置训练鉴别器的标签，目标域的标签为 1， 非目标域的标签为 0
-                    gan_labels = [torch.zeros((feature_map.size(0), 1), device=DEVICE) if i != config.target_domain else torch.ones((feature_map.size(0), 1), device=DEVICE) for i, feature_map in enumerate(feature_maps)]
-                    for _ in range(config.k): # 对鉴别器更新 k 步
-                        for i, (feature_map, gan_label) in enumerate(zip(feature_maps, gan_labels)):
-                            if i != config.target_domain:
-                                gan_optim.zero_grad()
-                                # 计算 loss：将非目标域的 feature map 输入，计算 loss1；将目标域的 feature map 输入，计算 loss2；总 loss 为 (loss1 + loss2) * 0.5
-                                fake_gan_loss = gan_loss_fn(discriminator(feature_map.detach()), gan_label)
-                                real_gan_loss = gan_loss_fn(discriminator(feature_maps[config.target_domain].detach()), gan_labels[config.target_domain])
-                                d_loss = (fake_gan_loss + real_gan_loss) / 2
-                                d_loss.backward()
-                                gan_optim.step()
+                    gan_update_counter += config.k
+                    if gan_update_counter >= 1:
+                        logging.debug("updating discriminator")
+                        # 设置训练鉴别器的标签，目标域的标签为 1， 非目标域的标签为 0
+                        gan_labels = [torch.zeros((feature_map.size(0), 1), device=DEVICE) if i != config.target_domain else torch.ones((feature_map.size(0), 1), device=DEVICE) for i, feature_map in enumerate(feature_maps)]
+                        for _ in range(int(gan_update_counter)): # 对鉴别器更新
+                            for i, (feature_map, gan_label) in enumerate(zip(feature_maps, gan_labels)):
+                                if i != config.target_domain:
+                                    gan_optim.zero_grad()
+                                    # 计算 loss：将非目标域的 feature map 输入，计算 loss1；将目标域的 feature map 输入，计算 loss2；总 loss 为 (loss1 + loss2) * 0.5
+                                    fake_gan_loss = gan_loss_fn(discriminator(feature_map.detach()), gan_label)
+                                    real_gan_loss = gan_loss_fn(discriminator(feature_maps[config.target_domain].detach()), gan_labels[config.target_domain])
+                                    d_loss = (fake_gan_loss + real_gan_loss) / 2
+                                    d_loss.backward()
+                                    gan_optim.step()
+                        gan_update_counter = 0
+                    
                     # 从鉴别器反向传播梯度到 client localmodel 上
                     gan_losses = [gan_loss_fn(discriminator(feature_map), torch.ones((feature_map.size(0), 1), device=DEVICE)) if i != config.target_domain else None for i, feature_map in enumerate(feature_maps)]
                     [gan_loss.backward(retain_graph=True) if gan_loss else None for gan_loss in gan_losses]
@@ -106,16 +113,13 @@ if __name__ == "__main__":
         torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{alg}/{round}.png", nrow=fm_size[1], normalize=True)
 
         # 聚合模型
-        client_globalmodel = aggregate_model(client_localmodels, [0.2, 0.2, 0.2, 0.2, 0.2])
-        server_globalmodel = aggregate_model(server_localmodels, [0.2, 0.2, 0.2, 0.2, 0.2])
+        client_globalmodel = aggregate_model(client_localmodels, [1 / len(datasets)] * len(datasets))
+        server_globalmodel = aggregate_model(server_localmodels, [1 / len(datasets)] * len(datasets))
         # 评估模型精度
         accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
-        logging.info(f"acc: {dataset_manager.datasets[0]}[{accs[0]:.4f}] | {dataset_manager.datasets[1]}[{accs[1]:.4f}] | {dataset_manager.datasets[2]}[{accs[2]:.4f}] | {dataset_manager.datasets[3]}[{accs[3]:.4f}] | {dataset_manager.datasets[4]}[{accs[4]:.4f}]")
+        logging.info(f"acc: {datasets[0]}[{accs[0]:.4f}] | {datasets[1]}[{accs[1]:.4f}]")
         wandb.log({
             "round": round,
-            f"{dataset_manager.datasets[0]} acc": accs[0],
-            f"{dataset_manager.datasets[1]} acc": accs[1],
-            f"{dataset_manager.datasets[2]} acc": accs[2],
-            f"{dataset_manager.datasets[3]} acc": accs[3],
-            f"{dataset_manager.datasets[4]} acc": accs[4]
+            f"{datasets[0]} acc": accs[0],
+            f"{datasets[1]} acc": accs[1],
         })
