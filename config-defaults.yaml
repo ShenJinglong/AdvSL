@@ -22,10 +22,10 @@ add_gan:
   value: !!bool True
 k:
   desc: discriminator update round
-  value: !!float 0.5
+  value: !!float 0.25
 target_domain:
   desc: target domain (select a client as target domain, and the number here indicate client index)
   value: !!int 0
 ratio_gan:
   desc: weight of gradient back propagated from discriminator
-  value: !!float 0.2
+  value: !!float 0.1

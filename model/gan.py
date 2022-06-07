@@ -7,6 +7,7 @@ class Discriminator(torch.nn.Module):
     ) -> None:
         super().__init__()
         self.__layers = torch.nn.Sequential(
+            torch.nn.Flatten(),
             torch.nn.Linear(in_size, 512),
             torch.nn.LeakyReLU(0.2, inplace=True),
             torch.nn.Linear(512,256),
@@ -18,8 +19,7 @@ class Discriminator(torch.nn.Module):
     def forward(self,
         img: torch.Tensor
     ) -> torch.Tensor:
-        img_flat = img.view(img.size(0), -1)
-        validity = self.__layers(img_flat)
+        validity = self.__layers(img)
         return validity
 
 if __name__ == "__main__":

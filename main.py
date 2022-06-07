@@ -4,8 +4,8 @@ import torch
 import torchvision
 import logging
 
+from ClusterUnion import ClusterUnion
 from model.resnet import ResNet18_Mnist
-from model.gan import Discriminator
 from utils.data_utils import DatasetManager
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad
 from utils.hardware_utils import get_free_gpu
@@ -27,10 +27,10 @@ else:
     alg = "SFL"
     logging.info(f"@@ SFL [{DEVICE}]")
 
-
 # 准备数据集
-datasets = ["MNIST", "MNIST_M"]
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
+datasets = dataset_manager.datasets
+# datasets = ["MNIST", "MNIST_M"]
 trainloaders = dataset_manager.get_trainloaders(datasets)
 testloaders = dataset_manager.get_testloaders(datasets)
 
@@ -43,16 +43,15 @@ server_localmodels = [model.get_splited_module(config.cut_point)[1] for model in
 client_localmodels = [model.get_splited_module(config.cut_point)[0] for model in local_models] # client 侧的本地模型
 with torch.no_grad():
     fm_size = client_localmodels[0](torch.randn((1, 3, 28, 28), device=DEVICE)).size() # 获取切割层输出的 feature map 的 size
-if config.add_gan:
-    discriminator = Discriminator(fm_size.numel()).to(DEVICE) # 鉴别器
 
 # 优化器，loss等
 loss_fn = torch.nn.CrossEntropyLoss().to(DEVICE) # 正常 SFL 训练的 loss
 server_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in server_localmodels] # 正常 SFL 训练的 optim
 client_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in client_localmodels]
+
+# 鉴别器
 if config.add_gan:
-    gan_loss_fn = torch.nn.BCELoss().to(DEVICE) # 鉴别器的 loss
-    gan_optim = torch.optim.SGD(discriminator.parameters(), config.lr) # 用于更新鉴别器的 optim
+    cluster_unions = [ClusterUnion(config.k, fm_size, config.lr, DEVICE) for _ in range(len(datasets)-1)]
 
 if __name__ == "__main__":
     for round in range(config.global_round):
@@ -75,33 +74,18 @@ if __name__ == "__main__":
                 
                 feature_maps = [client_localmodel(sample) for client_localmodel, sample in zip(client_localmodels, samples)] # 各个 client 输出 feature map
 
+############################################################ 鉴别器起作用的部分， 去掉就是单纯的SFL ######################################################################
+#######################################################################################################################################################################
                 if config.add_gan:
-                    gan_update_counter += config.k
-                    if gan_update_counter >= 1:
-                        logging.debug("updating discriminator")
-                        # 设置训练鉴别器的标签，目标域的标签为 1， 非目标域的标签为 0
-                        gan_labels = [torch.zeros((feature_map.size(0), 1), device=DEVICE) if i != config.target_domain else torch.ones((feature_map.size(0), 1), device=DEVICE) for i, feature_map in enumerate(feature_maps)]
-                        for _ in range(int(gan_update_counter)): # 对鉴别器更新
-                            for i, (feature_map, gan_label) in enumerate(zip(feature_maps, gan_labels)):
-                                if i != config.target_domain:
-                                    gan_optim.zero_grad()
-                                    # 计算 loss：将非目标域的 feature map 输入，计算 loss1；将目标域的 feature map 输入，计算 loss2；总 loss 为 (loss1 + loss2) * 0.5
-                                    fake_gan_loss = gan_loss_fn(discriminator(feature_map.detach()), gan_label)
-                                    real_gan_loss = gan_loss_fn(discriminator(feature_maps[config.target_domain].detach()), gan_labels[config.target_domain])
-                                    d_loss = (fake_gan_loss + real_gan_loss) / 2
-                                    d_loss.backward()
-                                    gan_optim.step()
-                        gan_update_counter = 0
-                    
-                    # 从鉴别器反向传播梯度到 client localmodel 上
-                    gan_losses = [gan_loss_fn(discriminator(feature_map), torch.ones((feature_map.size(0), 1), device=DEVICE)) if i != config.target_domain else None for i, feature_map in enumerate(feature_maps)]
-                    [gan_loss.backward(retain_graph=True) if gan_loss else None for gan_loss in gan_losses]
-                    # 对 gan 反向的梯度进行加权
+                    # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
+                    [cluster_union.update(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
+                    # 对鉴别器反向的梯度进行加权
                     [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
+#######################################################################################################################################################################
 
                 # 将 feature map 输入 server localmodels，并反向传播，得到 SFL 的梯度，这些梯度会与之前 gan 的加权梯度加起来
                 outputs = [server_localmodel(feature_map) for server_localmodel, feature_map in zip(server_localmodels, feature_maps)]
-                losses = [loss_fn(output, label) for output, label in zip(outputs, labels)]
+                losses = [loss_fn(output, label) for output, label in zip(outputs, labels)] 
                 [loss.backward() for loss in losses]                
 
                 # 更新 localmodels
@@ -117,9 +101,12 @@ if __name__ == "__main__":
         server_globalmodel = aggregate_model(server_localmodels, [1 / len(datasets)] * len(datasets))
         # 评估模型精度
         accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
-        logging.info(f"acc: {datasets[0]}[{accs[0]:.4f}] | {datasets[1]}[{accs[1]:.4f}]")
+        # 日志
+        logging_info = "acc:"
+        for i, acc in enumerate(accs):
+            logging_info += f" {datasets[i]}[{acc:.4f}] |"
+        logging.info(logging_info)
         wandb.log({
             "round": round,
-            f"{datasets[0]} acc": accs[0],
-            f"{datasets[1]} acc": accs[1],
+            **{f"{dataset} acc": acc for dataset, acc in zip(datasets, accs)}
         })
