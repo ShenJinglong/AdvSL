@@ -44,8 +44,8 @@ class ClusterUnion:
         float_fms: List[torch.Tensor]
     ) -> None:
         self.__optim.zero_grad()
-        anchor_label = torch.ones((anchor_fm.size(0), 1), dtype=torch.int64, device=self.__device)
-        float_labels = [torch.zeros((float_fm.size(0), 1), dtype=torch.int64, device=self.__device) for float_fm in float_fms]
+        anchor_label = torch.ones((anchor_fm.size(0), 1), device=self.__device)
+        float_labels = [torch.zeros((float_fm.size(0), 1), device=self.__device) for float_fm in float_fms]
         anchor_loss = self.__loss_fn(self.__discriminator(anchor_fm), anchor_label)
         float_losses = [self.__loss_fn(self.__discriminator(float_fm), float_label) for float_fm, float_label in zip(float_fms, float_labels)]
         anchor_loss.backward(retain_graph=True)
