@@ -29,8 +29,8 @@ else:
 
 # 准备数据集
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
-# datasets = dataset_manager.datasets
-datasets = ["MNIST", "MNIST_M"]
+datasets = dataset_manager.datasets
+# datasets = ["MNIST", "MNIST_M"]
 trainloaders = dataset_manager.get_trainloaders(datasets)
 testloaders = dataset_manager.get_testloaders(datasets)
 
@@ -78,16 +78,16 @@ if __name__ == "__main__":
 #######################################################################################################################################################################
                 if config.add_gan:
                     # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
-                    [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
+                    [cluster_union.update_gr(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
                     # 对鉴别器反向的梯度进行加权
-                    [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
-                    # [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
+                    # [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
+                    [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
 #######################################################################################################################################################################
 
                 # 将 feature map 输入 server localmodels，并反向传播，得到 SFL 的梯度，这些梯度会与之前 gan 的加权梯度加起来
                 outputs = [server_localmodel(feature_map) for server_localmodel, feature_map in zip(server_localmodels, feature_maps)]
-                losses = [loss_fn(output, label) for output, label in zip(outputs, labels)] 
-                [loss.backward() for loss in losses]                
+                losses = [loss_fn(output, label) for output, label in zip(outputs, labels)]
+                [loss.backward() for loss in losses]
 
                 # 更新 localmodels
                 [client_optim.step() for client_optim in client_optims]
