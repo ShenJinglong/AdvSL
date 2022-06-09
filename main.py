@@ -29,8 +29,8 @@ else:
 
 # 准备数据集
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
-# datasets = dataset_manager.datasets
-datasets = ["MNIST", "MNIST_M"]
+datasets = dataset_manager.datasets
+# datasets = ["MNIST", "MNIST_M"]
 trainloaders = dataset_manager.get_trainloaders(datasets)
 testloaders = dataset_manager.get_testloaders(datasets)
 
