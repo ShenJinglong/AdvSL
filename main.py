@@ -104,8 +104,11 @@ if __name__ == "__main__":
         logging_info = "acc:"
         for i, acc in enumerate(accs):
             logging_info += f" {datasets[i]}[{acc:.4f}] |"
+        total_acc = sum(accs)
+        logging_info += f" TOTAL_ACC[{total_acc:.4f}]"
         logging.info(logging_info)
         wandb.log({
             "round": round,
+            "total_acc": total_acc,
             **{f"{dataset} acc": acc for dataset, acc in zip(datasets, accs)}
         })
