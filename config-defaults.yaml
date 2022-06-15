@@ -4,7 +4,7 @@ cut_point:
   value: !!int 2
 lr:
   desc: learning rate
-  value: !!float 0.001
+  value: !!float 0.25
 percent:
   desc: proportion of data set used for training
   value: !!float 1
