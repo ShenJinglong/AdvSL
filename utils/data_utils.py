@@ -98,7 +98,8 @@ class DatasetManager():
                     transform=transform
                 ),
                 batch_size=batch_size,
-                shuffle=True
+                shuffle=True,
+                drop_last=True
             ) for name, channel, transform in zip(self.datasets, channels, transforms)
         }
         self.__testloaders = {
@@ -111,7 +112,8 @@ class DatasetManager():
                     transform=transform
                 ),
                 batch_size=batch_size,
-                shuffle=False
+                shuffle=False,
+                drop_last=True
             ) for name, channel, transform in zip(self.datasets, channels, transforms)
         }
 
