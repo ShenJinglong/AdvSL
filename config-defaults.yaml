@@ -4,10 +4,10 @@ cut_point:
   value: !!int 2
 lr:
   desc: learning rate
-  value: !!float 0.0001 # 0.25
+  value: !!float 0.001 # 0.25
 percent:
   desc: proportion of data set used for training
-  value: !!float 1
+  value: !!float 0.25
 batch_size:
   desc: batch size
   value: !!int 64
