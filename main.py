@@ -7,10 +7,11 @@ import logging
 
 from ClusterUnion import ClusterUnion
 from model.resnet import ResNet18_Mnist
-from utils.data_utils import DatasetManager
+from utils.data_utils import DatasetManager, seed_torch
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad
 from utils.hardware_utils import get_free_gpu
 
+seed_torch() # 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -30,7 +31,7 @@ else:
 
 # 准备数据集
 dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
-datasets = dataset_manager.datasets
+datasets = dataset_manager.datasets # 
 # datasets = ["MNIST", "MNIST_M"]
 num_client = len(datasets)
 trainloaders = dataset_manager.get_trainloaders(datasets)
@@ -48,6 +49,7 @@ with torch.no_grad():
 loss_fn = torch.nn.CrossEntropyLoss().to(DEVICE) # 正常 SL 训练的 loss
 server_optim = torch.optim.SGD(server_globalmodel.parameters(), config.lr) # 正常 SL 训练的 optim
 client_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in client_localmodels]
+# client_optims = [torch.optim.SGD(model.parameters(), config.lr) if i == config.target_domain else torch.optim.SGD(model.parameters(), 0.001) for i, model in enumerate(client_localmodels)]
 
 # 鉴别器
 if config.add_gan:
@@ -58,7 +60,7 @@ if __name__ == "__main__":
         logging.info(f"round: {round}")
 
         # 下发模型
-        [model.load_state_dict(client_globalmodel.state_dict()) for model in client_localmodels] # 将 client globalmodel 加载到 client localmodels 里边
+        # [model.load_state_dict(client_globalmodel.state_dict()) for model in client_localmodels] # 将 client globalmodel 加载到 client localmodels 里边
 
         # training
         for epoch in range(config.local_epoch):
@@ -97,9 +99,10 @@ if __name__ == "__main__":
         torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{alg}/{round}.png", nrow=fm_size[1], normalize=True)
 
         # 聚合模型
-        client_globalmodel = aggregate_model(client_localmodels, [1 / num_client] * num_client)
+        # client_globalmodel = aggregate_model(client_localmodels, [1 / num_client] * num_client)
         # 评估模型精度
-        accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
+        # accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
+        accs = [eval_model(client_localmodel, server_globalmodel, testloader) for client_localmodel, testloader in zip(client_localmodels, testloaders)]
         # 日志
         logging_info = "acc:"
         for i, acc in enumerate(accs):

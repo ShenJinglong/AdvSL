@@ -46,6 +46,11 @@ if __name__ == "__main__":
     output.backward()
     for p in model.parameters():
         print(p.grad)
-    ratio_model_grad(model, 0.6)
+    ratio_model_grad(model, -0.6)
+    for p in model.parameters():
+        print(p.grad)
+    input = 2*torch.ones((1, 1))
+    output = model(input)
+    output.backward()
     for p in model.parameters():
         print(p.grad)

@@ -1,6 +1,6 @@
 
 import os
-from random import shuffle
+import random
 from typing import List
 import numpy as np
 import torch
@@ -132,3 +132,13 @@ class DatasetManager():
         for name in names:
             testloaders.append(self.__testloaders[name])
         return testloaders
+
+def seed_torch(seed=1029):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
