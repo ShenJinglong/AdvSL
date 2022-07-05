@@ -8,7 +8,7 @@ import logging
 from ClusterUnion import ClusterUnion
 from model.resnet import ResNet18_Mnist
 from utils.data_utils import DatasetManager, seed_torch
-from utils.model_utils import aggregate_model, eval_model, ratio_model_grad
+from utils.model_utils import aggregate_model, eval_model, ratio_model_grad, eval_model_with_mutlitest
 from utils.hardware_utils import get_free_gpu
 
 seed_torch() # 
@@ -78,10 +78,10 @@ if __name__ == "__main__":
 #######################################################################################################################################################################
                 if config.add_gan:
                     # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
-                    [cluster_union.update_gr(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
+                    [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
                     # 对鉴别器反向的梯度进行加权
-                    # [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
-                    [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
+                    [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
+                    # [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
 #######################################################################################################################################################################
 
                 # 将 feature map 输入 server model，并反向传播，得到 SL 的梯度，这些梯度会与之前 gan 的加权梯度加起来
@@ -102,7 +102,8 @@ if __name__ == "__main__":
         # client_globalmodel = aggregate_model(client_localmodels, [1 / num_client] * num_client)
         # 评估模型精度
         # accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
-        accs = [eval_model(client_localmodel, server_globalmodel, testloader) for client_localmodel, testloader in zip(client_localmodels, testloaders)]
+        # accs = [eval_model(client_localmodel, server_globalmodel, testloader) for client_localmodel, testloader in zip(client_localmodels, testloaders)]
+        accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
         # 日志
         logging_info = "acc:"
         for i, acc in enumerate(accs):
