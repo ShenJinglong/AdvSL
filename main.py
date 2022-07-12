@@ -53,7 +53,8 @@ client_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in cli
 
 # 鉴别器
 if config.add_gan:
-    cluster_unions = [ClusterUnion(config.k, fm_size, config.lr, DEVICE) for _ in range(num_client-1)]
+    # cluster_unions = [ClusterUnion(config.k, fm_size, config.lr, DEVICE) for _ in range(num_client-1)]
+    cluster_union = ClusterUnion(config.k, fm_size, num_client, config.lr, DEVICE)
 
 if __name__ == "__main__":
     for round in range(config.global_round):
@@ -78,10 +79,11 @@ if __name__ == "__main__":
 #######################################################################################################################################################################
                 if config.add_gan:
                     # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
-                    [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
+                    # [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
+                    cluster_union.update_multiout(feature_maps)
                     # 对鉴别器反向的梯度进行加权
-                    [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
-                    # [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
+                    # [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
+                    [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
 #######################################################################################################################################################################
 
                 # 将 feature map 输入 server model，并反向传播，得到 SL 的梯度，这些梯度会与之前 gan 的加权梯度加起来

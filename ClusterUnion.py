@@ -8,13 +8,15 @@ class ClusterUnion:
     def __init__(self,
         k: float,
         fm_size: torch.Size,
+        client_num: int,
         lr: float,
         device: str
     ) -> None:
         self.__k = k
         self.__update_counter = 0
-        self.__discriminator = Discriminator(fm_size.numel()).to(device)
-        self.__loss_fn = torch.nn.BCELoss().to(device)
+        self.__discriminator = Discriminator(fm_size.numel(), client_num).to(device)
+        # self.__loss_fn = torch.nn.BCELoss().to(device)
+        self.__loss_fn = torch.nn.CrossEntropyLoss().to(device)
         self.__optim = torch.optim.SGD(self.__discriminator.parameters(), lr)
         self.__device = device
 
@@ -64,3 +66,20 @@ class ClusterUnion:
         total_loss = (anchor_loss + sum(float_losses)) / (1 + len(float_losses))
         total_loss.backward(retain_graph=True)
         self.__optim.step()
+
+    def update_multiout(self,
+        fms: List[torch.Tensor]
+    ) -> None:
+        self.__optim.zero_grad()
+        # labels = [torch.zeros((fm.size(0), len(fms))).scatter_(
+        #     1, torch.ones((fm.size(0),1), dtype=torch.int64)*i, torch.ones((fm.size(0),1))
+        # ) for i, fm in enumerate(fms)]
+        labels = [torch.ones((fm.size(0),), dtype=torch.int64)*i for i, fm in enumerate(fms)]
+        losses = [self.__loss_fn(self.__discriminator(fm), label) for fm, label in zip(fms, labels)]
+        [loss.backward(retain_graph=True) for loss in losses]
+        self.__optim.step()
+
+if __name__ == "__main__":
+    dummy_union = ClusterUnion(1, torch.Size((8,)), 5, 0.25, "cpu")
+    dummy_inputs = [torch.rand((2,8)) for _ in range(5)]
+    dummy_union.update_multiout(dummy_inputs)
