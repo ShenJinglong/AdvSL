@@ -21,7 +21,7 @@ add_gan:
   desc: use discriminator or not
   value: !!bool True
 k:
-  desc: discriminator update round (deprecated ...)
+  desc: discriminator update round
   value: !!float 0.25
 target_domain:
   desc: target domain (select a client as target domain, and the number here indicate client index)

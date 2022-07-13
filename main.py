@@ -5,7 +5,7 @@ import torch
 import torchvision
 import logging
 
-from ClusterUnion import ClusterUnion
+from cluster import ClusterUnion, ClusterUnionMultiout
 from model.resnet import ResNet18_Mnist
 from utils.data_utils import DatasetManager, seed_torch
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad, eval_model_with_mutlitest
@@ -54,9 +54,10 @@ client_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in cli
 # 鉴别器
 if config.add_gan:
     # cluster_unions = [ClusterUnion(config.k, fm_size, config.lr, DEVICE) for _ in range(num_client-1)]
-    cluster_union = ClusterUnion(config.k, fm_size, num_client, config.lr, DEVICE)
+    cluster_union = ClusterUnionMultiout(config.k, fm_size, num_client, config.lr, DEVICE)
 
 if __name__ == "__main__":
+    batch_counter = 0
     for round in range(config.global_round):
         logging.info(f"round: {round}")
 
@@ -80,7 +81,7 @@ if __name__ == "__main__":
                 if config.add_gan:
                     # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
                     # [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
-                    cluster_union.update_multiout(feature_maps)
+                    cluster_union.update(feature_maps)
                     # 对鉴别器反向的梯度进行加权
                     # [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
                     [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
@@ -95,26 +96,28 @@ if __name__ == "__main__":
                 # 更新 localmodels
                 [client_optim.step() for client_optim in client_optims]
                 server_optim.step()
+
+                # 10个batch，1次test
+                batch_counter += 1
+                if batch_counter % 10 == 0:
+                    accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
+                    # 日志
+                    logging_info = "(round {round}, batch {batch_counter}) acc:"
+                    for i, acc in enumerate(accs):
+                        logging_info += f" {datasets[i]}[{acc:.4f}] |"
+                    total_acc = sum(accs)
+                    logging_info += f" TOTAL_ACC[{total_acc:.4f}]"
+                    logging.info(logging_info)
+                    wandb.log({
+                        "round": round,
+                        "batch": batch_counter,
+                        "total_acc": total_acc,
+                        **{f"{dataset} acc": acc for dataset, acc in zip(datasets, accs)}
+                    })
         # 将各个用户最后一个 batch 的第一个样本计算得到的 feature map 保存起来，用来观察 gan 对 feature map 的影响
         # 图像保存在 images 文件夹下，每个 round 保存一张
         # 图像中，每一行表示对应用户输出的各层 feature map；每一列表示 feature map 对应 channel 在不同用户上的区别
-        torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{alg}/{round}.png", nrow=fm_size[1], normalize=True)
+        # torchvision.utils.save_image(torch.concat([feature_map[0].reshape(fm_size[1], 1, fm_size[2], fm_size[3]) for feature_map in feature_maps], dim=0), f"images/{alg}/{round}.png", nrow=fm_size[1], normalize=True)
 
         # 聚合模型
         # client_globalmodel = aggregate_model(client_localmodels, [1 / num_client] * num_client)
-        # 评估模型精度
-        # accs = [eval_model(client_globalmodel, server_globalmodel, testloader) for testloader in testloaders]
-        # accs = [eval_model(client_localmodel, server_globalmodel, testloader) for client_localmodel, testloader in zip(client_localmodels, testloaders)]
-        accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
-        # 日志
-        logging_info = "acc:"
-        for i, acc in enumerate(accs):
-            logging_info += f" {datasets[i]}[{acc:.4f}] |"
-        total_acc = sum(accs)
-        logging_info += f" TOTAL_ACC[{total_acc:.4f}]"
-        logging.info(logging_info)
-        wandb.log({
-            "round": round,
-            "total_acc": total_acc,
-            **{f"{dataset} acc": acc for dataset, acc in zip(datasets, accs)}
-        })
