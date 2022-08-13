@@ -6,7 +6,6 @@
 
 1. 安装 pytorch，torchvision，wandb
 2. 因为代码中使用 wandb 进行可视化和参数管理，所以在运行前需要运行 ```wandb login``` 登陆 wandb 账号。若不想用wandb，运行 ```wandb offline``` 关掉即可。
-3. 新建 data 文件夹，并将[下载](https://drive.google.com/file/d/1moBE_ASD5vIOaU8ZHm_Nsj0KAfX5T0Sf/view?usp=sharing)的数据集放入其中
-4. 在代码目录里新建 images/GanSFL 和 images/SFL 文件夹，用于保存训练过程中输出的 feature map
-5. 代码的配置参数都在 config-defaults.yaml 里，修改后就可以不同参数运行。
+3. 新建 datsets 文件夹，并将[下载](https://drive.google.com/file/d/1moBE_ASD5vIOaU8ZHm_Nsj0KAfX5T0Sf/view?usp=sharing)的数据集放入其中
+4. 代码的配置参数都在 config-defaults.yaml 里，修改后就可以不同参数运行。
 

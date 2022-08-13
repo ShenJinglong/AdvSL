@@ -1,7 +1,6 @@
 
-from typing import Tuple
 import torch
-from ModelBase import ModelBase
+from model.ModelBase import ModelBase
 
 class BasicBlock(torch.nn.Module):
     def __init__(self,

@@ -29,7 +29,7 @@ else:
     logging.info(f"@@ SFL [{DEVICE}]")
 
 # 准备数据集
-dataset_manager = DatasetManager("./data/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
+dataset_manager = DatasetManager("./datasets/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
 datasets = dataset_manager.datasets # 
 # datasets = ["MNIST", "MNIST_M"]
 num_client = len(datasets)
