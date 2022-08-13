@@ -2,7 +2,6 @@
 import copy
 import wandb
 import torch
-import torchvision
 import logging
 
 from cluster import ClusterUnion, ClusterUnionMultiout
@@ -11,7 +10,7 @@ from utils.data_utils import DatasetManager, seed_torch
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad, eval_model_with_mutlitest
 from utils.hardware_utils import get_free_gpu
 
-seed_torch() # 
+seed_torch()
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
