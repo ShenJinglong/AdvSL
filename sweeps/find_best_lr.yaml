@@ -1,0 +1,16 @@
+program: main.py
+project: GanSFL
+entity: sjinglong
+method: bayes
+metric:
+  name: total_acc
+  goal: maximize
+early_terminate:
+  type: hyperband
+  min_iter: 3
+name: find-best-lr
+parameters:
+  lr:
+    max: 0.5
+    min: 0.01
+    distribution: uniform

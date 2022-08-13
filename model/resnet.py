@@ -1,7 +1,6 @@
 
-from tracemalloc import stop
-from typing import Tuple
 import torch
+from model.ModelBase import ModelBase
 
 class BasicBlock(torch.nn.Module):
     def __init__(self,
@@ -27,22 +26,21 @@ class BasicBlock(torch.nn.Module):
         x: torch.Tensor
     ) -> torch.Tensor:
         y = torch.relu(self.bn1(self.conv1(x)))
-        
         y = self.bn2(self.conv2(y))
         y += self.shortcut(x)
         y = torch.relu(y)
         return y
 
-class ResNet18_Mnist(torch.nn.Module):
+class ResNet18_Mnist(ModelBase):
     def __init__(self) -> None:
         super().__init__()
-        self.__blocks = torch.nn.ModuleList([
+        self._blocks = torch.nn.ModuleList([
             torch.nn.Sequential(
                 torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
                 torch.nn.BatchNorm2d(64),
                 torch.nn.ReLU()
             ),                              # 1
-            BasicBlock(64, 64, 1),          # 2
+            BasicBlock(64, 64, 1),          # 2            
             BasicBlock(64, 64, 1),          # 3
             BasicBlock(64, 128, 2),         # 4
             BasicBlock(128, 128, 1),        # 5
@@ -56,24 +54,8 @@ class ResNet18_Mnist(torch.nn.Module):
                 torch.nn.Linear(512, 10)
             )                               # 10
         ])
-        self.block_num = len(self.__blocks)
+        self.block_num = len(self._blocks)
         self.__initialize_weights()
-
-    def forward(self,
-        x: torch.Tensor,
-        start: int = 0,
-        stop: int = 10
-    ):
-        for block in self.__blocks[start:stop]:
-            x = block(x)
-        return x
-    
-    def get_splited_module(self,
-        cut_point:int
-    ) -> Tuple[torch.nn.Module, torch.nn.Module]:
-        if cut_point < 0 or cut_point > self.block_num:
-            raise ValueError(f"Cut point {cut_point} out of module scope [0 - {self.block_num}].")
-        return (torch.nn.Sequential(*self.__blocks[:cut_point]), torch.nn.Sequential(*self.__blocks[cut_point:]))
 
     def __initialize_weights(self):
         for m in self.modules():
@@ -93,5 +75,4 @@ if __name__ == "__main__":
     print(y.size())
     y = deep(y)
     print(y)
-
     print(shallow)

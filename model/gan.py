@@ -3,7 +3,8 @@ import torch
 
 class Discriminator(torch.nn.Module):
     def __init__(self,
-        in_size: int
+        in_size: int,
+        out_size: int
     ) -> None:
         super().__init__()
         self.__layers = torch.nn.Sequential(
@@ -12,7 +13,7 @@ class Discriminator(torch.nn.Module):
             torch.nn.LeakyReLU(0.2, inplace=True),
             torch.nn.Linear(512,256),
             torch.nn.LeakyReLU(0.2, inplace=True),
-            torch.nn.Linear(256, 1),
+            torch.nn.Linear(256, out_size),
             torch.nn.Sigmoid(),
         )
 

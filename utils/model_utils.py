@@ -35,6 +35,24 @@ def eval_model(client_model: torch.nn.Module, server_model: torch.nn.Module, tes
     server_model.train()
     return correct / total
 
+def eval_model_with_mutlitest(client_model: torch.nn.Module, server_model: torch.nn.Module, testloaders: List[torch.utils.data.DataLoader]) -> float:
+    client_model.eval()
+    server_model.eval()
+    device = next(client_model.parameters()).device
+    total, correct = 0, 0
+    with torch.no_grad():
+        for testloader in testloaders:
+            for inputs, label in testloader:
+                inputs, label = inputs.to(device), label.to(device)
+                fm = client_model(inputs)
+                outputs = server_model(fm)
+                _, pred = outputs.max(1)
+                total += label.size(0)
+                correct += (pred == label).sum().item()
+    client_model.train()
+    server_model.train()
+    return correct / total
+
 def ratio_model_grad(model: torch.nn.Module, ratio: float) -> None:
     for p in model.parameters():
         p.grad *= ratio
@@ -46,6 +64,11 @@ if __name__ == "__main__":
     output.backward()
     for p in model.parameters():
         print(p.grad)
-    ratio_model_grad(model, 0.6)
+    ratio_model_grad(model, -0.6)
+    for p in model.parameters():
+        print(p.grad)
+    input = 2*torch.ones((1, 1))
+    output = model(input)
+    output.backward()
     for p in model.parameters():
         print(p.grad)
