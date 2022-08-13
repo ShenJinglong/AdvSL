@@ -1,6 +1,7 @@
 
 from typing import List
 import torch
+import logging
 
 from model.gan import Discriminator
 
@@ -13,7 +14,7 @@ class ClusterUnion:
     ) -> None:
         self.__k = k
         self.__update_counter = 0
-        self.__discriminator = Discriminator(fm_size.numel()).to(device)
+        self.__discriminator = Discriminator(fm_size.numel(), 1).to(device)
         self.__loss_fn = torch.nn.BCELoss().to(device)
         self.__optim = torch.optim.SGD(self.__discriminator.parameters(), lr)
         self.__device = device
@@ -64,3 +65,56 @@ class ClusterUnion:
         total_loss = (anchor_loss + sum(float_losses)) / (1 + len(float_losses))
         total_loss.backward(retain_graph=True)
         self.__optim.step()
+
+class ClusterUnionMultiout:
+    def __init__(self,
+        k: float,
+        fm_size: torch.Size,
+        client_num: int,
+        lr: float,
+        device: str
+    ) -> None:
+        self.__k = k
+        self.__update_counter = 0
+        self.__discriminator = Discriminator(fm_size.numel(), client_num).to(device)
+        self.__loss_fn = torch.nn.CrossEntropyLoss().to(device)
+        self.__bce_loss_fn = torch.nn.BCELoss().to(device)
+        self.__optim = torch.optim.SGD(self.__discriminator.parameters(), lr)
+        self.__device = device
+
+    def update_gr(self,
+        fms: List[torch.Tensor]
+    ) -> None:
+        self.__optim.zero_grad()
+        # labels = [torch.zeros((fm.size(0), len(fms))).scatter_(
+        #     1, torch.ones((fm.size(0),1))*i, torch.ones((fm.size(0),1))
+        # ) for i, fm in enumerate(fms)] # one-hot coding
+        labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
+        losses = [self.__loss_fn(self.__discriminator(fm), label) for fm, label in zip(fms, labels)]
+        [loss.backward(retain_graph=True) for loss in losses]
+        self.__optim.step()
+
+    def update(self,
+        fms: List[torch.Tensor]
+    ) -> None:
+        self.__optim.zero_grad()
+        gene_losses = [self.__bce_loss_fn(self.__discriminator(fm), torch.ones((fm.size(0), len(fms)), device=self.__device)/len(fms)) for fm in fms]
+        [gene_loss.backward(retain_graph=True) for gene_loss in gene_losses]
+        logging.info("generator updated ...")
+        
+        self.__update_counter += self.__k
+        if self.__update_counter >= 1:
+            labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
+            for _ in range(int(self.__update_counter)):
+                for fm, label in zip(fms, labels):
+                    self.__optim.zero_grad()
+                    loss = self.__loss_fn(self.__discriminator(fm.detach()), label)
+                    loss.backward()
+                    self.__optim.step()
+                logging.info("discriminator updated ...")
+            self.__update_counter = 0
+
+if __name__ == "__main__":
+    dummy_union = ClusterUnion(1, torch.Size((8,)), 5, 0.25, "cpu")
+    dummy_inputs = [torch.rand((2,8)) for _ in range(5)]
+    dummy_union.update_multiout(dummy_inputs)
