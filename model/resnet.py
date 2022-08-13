@@ -42,6 +42,8 @@ class ResNet18_Mnist(torch.nn.Module):
                 torch.nn.ReLU()
             ),                              # 1
             BasicBlock(64, 64, 1),          # 2
+
+            
             BasicBlock(64, 64, 1),          # 3
             BasicBlock(64, 128, 2),         # 4
             BasicBlock(128, 128, 1),        # 5
