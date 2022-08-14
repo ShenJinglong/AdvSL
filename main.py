@@ -10,28 +10,58 @@ from utils.data_utils import DatasetManager, seed_torch
 from utils.model_utils import aggregate_model, eval_model, ratio_model_grad, eval_model_with_mutlitest
 from utils.hardware_utils import get_free_gpu
 
-seed_torch()
+# seed_torch()
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 wandb.init(
-    project="GanSFL",
+    project="AdvSL",
     entity="sjinglong"
 ) # 我们使用wandb对仿真的参数和数据进行管理，并进行可视化
 config = wandb.config
 DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
-if config.add_gan:
-    alg = "GanSFL"
-    logging.info(f"@@ GanSFL [{DEVICE}]")
+if config.add_disc:
+    alg = "AdvSL"
+    logging.info(f"@@ AdvSL [{DEVICE}]")
 else:
-    alg = "SFL"
-    logging.info(f"@@ SFL [{DEVICE}]")
+    alg = "SL"
+    logging.info(f"@@ SL [{DEVICE}]")
 
 # 准备数据集
 dataset_manager = DatasetManager("./datasets/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
-datasets = dataset_manager.datasets # 
-# datasets = ["MNIST", "MNIST_M"]
+datasets = [
+    "MNIST",
+    "SVHN",
+    "USPS",
+    "SynthDigits",
+    "MNIST_M",
+    "MNIST-blur",
+    "SVHN-blur",
+    "USPS-blur",
+    "SynthDigits-blur",
+    "MNIST_M-blur",
+    "MNIST-rot",
+    "SVHN-rot",
+    "USPS-rot",
+    "SynthDigits-rot",
+    "MNIST_M-rot",
+    "MNIST-noise",
+    "SVHN-noise",
+    "USPS-noise",
+    "SynthDigits-noise",
+    "MNIST_M-noise",
+    "MNIST-bright",
+    "SVHN-bright",
+    "USPS-bright",
+    "SynthDigits-bright",
+    "MNIST_M-bright",
+    "MNIST-hue",
+    "SVHN-hue",
+    "USPS-hue",
+    "SynthDigits-hue",
+    "MNIST_M-hue",
+]
 num_client = len(datasets)
 trainloaders = dataset_manager.get_trainloaders(datasets)
 testloaders = dataset_manager.get_testloaders(datasets)
@@ -46,14 +76,14 @@ with torch.no_grad():
 
 # 优化器，loss等
 loss_fn = torch.nn.CrossEntropyLoss().to(DEVICE) # 正常 SL 训练的 loss
-server_optim = torch.optim.SGD(server_globalmodel.parameters(), config.lr) # 正常 SL 训练的 optim
-client_optims = [torch.optim.SGD(model.parameters(), config.lr) for model in client_localmodels]
+server_optim = torch.optim.SGD(server_globalmodel.parameters(), config.sl_lr) # 正常 SL 训练的 optim
+client_optims = [torch.optim.SGD(model.parameters(), config.sl_lr) for model in client_localmodels]
 # client_optims = [torch.optim.SGD(model.parameters(), config.lr) if i == config.target_domain else torch.optim.SGD(model.parameters(), 0.001) for i, model in enumerate(client_localmodels)]
 
 # 鉴别器
-if config.add_gan:
+if config.add_disc:
     # cluster_unions = [ClusterUnion(config.k, fm_size, config.lr, DEVICE) for _ in range(num_client-1)]
-    cluster_union = ClusterUnionMultiout(config.k, fm_size, num_client, config.lr, DEVICE)
+    cluster_union = ClusterUnionMultiout(config.k, fm_size, num_client, config.adv_lr, DEVICE)
 
 if __name__ == "__main__":
     batch_counter = 0
@@ -77,13 +107,13 @@ if __name__ == "__main__":
 
 ############################################################ 鉴别器起作用的部分， 去掉就是单纯的SL ######################################################################
 #######################################################################################################################################################################
-                if config.add_gan:
+                if config.add_disc:
                     # cluster_union.update(feature_maps[config.target_domain], feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])
                     # [cluster_union.update_gr_(feature_maps[config.target_domain], [feature_map]) for cluster_union, feature_map in zip(cluster_unions, feature_maps[:config.target_domain] + feature_maps[config.target_domain+1:])]
                     cluster_union.update(feature_maps)
                     # 对鉴别器反向的梯度进行加权
                     # [ratio_model_grad(model, config.ratio_gan) if i != config.target_domain else None for i, model in enumerate(client_localmodels)]
-                    [ratio_model_grad(model, config.ratio_gan) for model in client_localmodels]
+                    [ratio_model_grad(model, config.ratio_disc) for model in client_localmodels]
 #######################################################################################################################################################################
 
                 # 将 feature map 输入 server model，并反向传播，得到 SL 的梯度，这些梯度会与之前 gan 的加权梯度加起来

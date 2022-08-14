@@ -4,6 +4,7 @@ import torch
 import logging
 
 from model.gan import Discriminator
+from utils.model_utils import ratio_model_grad
 
 class ClusterUnion:
     def __init__(self,
@@ -92,6 +93,7 @@ class ClusterUnionMultiout:
         labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
         losses = [self.__loss_fn(self.__discriminator(fm), label) for fm, label in zip(fms, labels)]
         [loss.backward(retain_graph=True) for loss in losses]
+        ratio_model_grad(self.__discriminator, 1./len(fms))
         self.__optim.step()
 
     def update(self,
@@ -106,11 +108,12 @@ class ClusterUnionMultiout:
         if self.__update_counter >= 1:
             labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
             for _ in range(int(self.__update_counter)):
+                self.__optim.zero_grad()
                 for fm, label in zip(fms, labels):
-                    self.__optim.zero_grad()
                     loss = self.__loss_fn(self.__discriminator(fm.detach()), label)
                     loss.backward()
-                    self.__optim.step()
+                ratio_model_grad(self.__discriminator, 1./len(fms))
+                self.__optim.step()
                 logging.info("discriminator updated ...")
             self.__update_counter = 0
 
