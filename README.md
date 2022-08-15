@@ -1,4 +1,4 @@
-# GanSFL
+# AdvSL
 
 > 实验数据集引用 "FedBN: Federated Learning on Non-IID Features via Local Batch Normalization" 中处理后的数据集。每个客户端所持有的数据集来自不同域（分别为 MNIST | SVHN | USPS | SynthDigits | MNIST_M）。
 
