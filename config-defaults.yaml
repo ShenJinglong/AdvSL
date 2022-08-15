@@ -16,13 +16,13 @@ cut_point:
   value: !!int 3
 sl_lr:
   desc: split learning rate
-  value: !!float 0.25 # 0.25
+  value: !!float 0.05 # 0.25
 adv_lr:
   desc: adversarial learning rate
-  value: !!float 0.25
+  value: !!float 0.05
 percent:
   desc: proportion of data set used for training
-  value: !!float 0.25
+  value: !!float 1
 batch_size:
   desc: batch size
   value: !!int 64
@@ -40,4 +40,4 @@ target_domain:
   value: !!int 0
 ratio_disc:
   desc: weight of gradient back propagated from discriminator. Note that this parameter should be non-negative.
-  value: !!float 1
+  value: !!float 20

@@ -1,0 +1,12 @@
+program: main.py
+project: AdvSL
+entity: sjinglong
+method: grid
+name: take_a_shot
+parameters:
+  model_type:
+    values: [resnet18, vgg16, lenet, alexnet]
+  disc_type:
+    values: [mul, anchor, none]
+  aggregate:
+    values: [True, False]

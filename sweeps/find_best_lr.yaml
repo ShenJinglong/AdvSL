@@ -1,5 +1,5 @@
 program: main.py
-project: GanSFL
+project: AdvSL
 entity: sjinglong
 method: bayes
 metric:

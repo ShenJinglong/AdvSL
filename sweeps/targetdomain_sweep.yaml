@@ -1,8 +1,0 @@
-program: main.py
-project: GanSFL
-entity: sjinglong
-method: grid
-name: targetdomain
-parameters:
-  target_domain:
-    values: [0, 1]
