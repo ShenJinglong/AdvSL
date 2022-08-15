@@ -4,6 +4,25 @@ import copy
 from typing import List
 import torch
 
+from model.resnet import ResNet18_Mnist
+from model.vgg import VGG16_Mnist
+from model.alexnet import AlexNet_Mnist
+from model.lenet import LeNet_Mnist
+
+def construct_model(
+    model_type: str,
+) -> torch.nn.Module:
+    if model_type == "vgg16":
+        return VGG16_Mnist()
+    elif model_type == "resnet18":
+        return ResNet18_Mnist()
+    elif model_type == "alexnet":
+        return AlexNet_Mnist()
+    elif model_type == "lenet":
+        return LeNet_Mnist()
+    else:
+        raise ValueError(f"Unrecognized model type: `{model_type}`")
+
 def aggregate_model(models: List[torch.nn.Module], weights: List[float]) -> torch.nn.Module:
     tmp_model = copy.deepcopy(models[0])
 

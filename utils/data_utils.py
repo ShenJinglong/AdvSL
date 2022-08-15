@@ -59,62 +59,57 @@ class DatasetManager():
         percent: float,
         batch_size: float
     ) -> None:
-        self.datasets = ["MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M"]
-        channels = [1, 3, 1, 3, 3]
-        transforms = [
-            torchvision.transforms.Compose([
-                torchvision.transforms.Grayscale(num_output_channels=3),
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ]),
-            torchvision.transforms.Compose([
-                torchvision.transforms.Resize((28, 28)),
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ]),
-            torchvision.transforms.Compose([
-                torchvision.transforms.Resize((28, 28)),
-                torchvision.transforms.Grayscale(num_output_channels=3),
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ]),
-            torchvision.transforms.Compose([
-                torchvision.transforms.Resize((28, 28)),
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ]),
-            torchvision.transforms.Compose([
-                torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ]),
-        ]
-        self.__trainloaders = {
-            name: torch.utils.data.DataLoader(
-                DigitsDataset(
-                    data_path=path + name,
-                    channels=channel,
-                    percent=percent,
-                    train=True,
-                    transform=transform
-                ),
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=True
-            ) for name, channel, transform in zip(self.datasets, channels, transforms)
+        self.__percent = percent
+        self.__batch_size = batch_size
+        self.__path = path
+        self.__datasets = {
+            "MNIST": {
+                "channel": 1,
+                "transform": [
+                    torchvision.transforms.Grayscale(num_output_channels=3),
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ]
+            },
+            "SVHN": {
+                "channel": 3,
+                "transform": [
+                    torchvision.transforms.Resize((28, 28)),
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))    
+                ]
+            },
+            "USPS": {
+                "channel": 1,
+                "transform": [
+                    torchvision.transforms.Resize((28, 28)),
+                    torchvision.transforms.Grayscale(num_output_channels=3),
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ]
+            },
+            "SynthDigits": {
+                "channel": 3,
+                "transform": [
+                    torchvision.transforms.Resize((28, 28)),
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ]
+            },
+            "MNIST_M": {
+                "channel": 3,
+                "transform": [
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ]
+            },
         }
-        self.__testloaders = {
-            name: torch.utils.data.DataLoader(
-                DigitsDataset(
-                    data_path=path + name,
-                    channels=channel,
-                    percent=percent,
-                    train=False,
-                    transform=transform
-                ),
-                batch_size=batch_size,
-                shuffle=False,
-                drop_last=True
-            ) for name, channel, transform in zip(self.datasets, channels, transforms)
+        self.__aug_transforms = {
+            "blur": [torchvision.transforms.GaussianBlur(7)],
+            "rot": [torchvision.transforms.RandomRotation(60)],
+            "noise": [torchvision.transforms.Lambda(lambda x: x + 0.2*torch.randn_like(x))],
+            "bright": [torchvision.transforms.ColorJitter(brightness=1)],
+            "hue": [torchvision.transforms.ColorJitter(hue=0.5)],
         }
 
     def get_trainloaders(self,
@@ -122,7 +117,21 @@ class DatasetManager():
     ) -> List[torch.utils.data.DataLoader]:
         trainloaders = []
         for name in names:
-            trainloaders.append(self.__trainloaders[name])
+            substrs = name.split("-")
+            trainloaders.append(torch.utils.data.DataLoader(
+                DigitsDataset(
+                    data_path=os.path.join(self.__path, substrs[0]),
+                    channels=self.__datasets[substrs[0]]["channel"],
+                    percent=self.__percent,
+                    train=True,
+                    transform=torchvision.transforms.Compose(
+                        self.__datasets[substrs[0]]["transform"] + self.__aug_transforms[substrs[1]] if len(substrs) == 2 else self.__datasets[substrs[0]]["transform"]
+                    )
+                ),
+                batch_size = self.__batch_size,
+                shuffle=True,
+                drop_last = True
+            ))
         return trainloaders
 
     def get_testloaders(self,
@@ -130,7 +139,21 @@ class DatasetManager():
     ) -> List[torch.utils.data.DataLoader]:
         testloaders = []
         for name in names:
-            testloaders.append(self.__testloaders[name])
+            substrs = name.split("-")
+            testloaders.append(torch.utils.data.DataLoader(
+                DigitsDataset(
+                    data_path=os.path.join(self.__path, substrs[0]),
+                    channels=self.__datasets[substrs[0]]["channel"],
+                    percent=self.__percent,
+                    train=False,
+                    transform=torchvision.transforms.Compose(
+                        self.__datasets[substrs[0]]["transform"] + self.__aug_transforms[substrs[1]] if len(substrs) == 2 else self.__datasets[substrs[0]]["transform"]
+                    )
+                ),
+                batch_size = self.__batch_size,
+                shuffle=False,
+                drop_last = False
+            ))
         return testloaders
 
 def seed_torch(seed=1029):

@@ -1,13 +1,28 @@
 
+model_type:
+  desc: Specify the model to be trained
+  value: !!str lenet # resnet18 or vgg16 or alexnet or lenet
+disc_type:
+  desc: Specify the type of discriminator, whether it is multi-classifier or anchor or no discriminator
+  value: !!str mul # mul or anchor or none
+disc_mode:
+  desc: set how discriminator works
+  value: !!str gr # gr or normal
+aggregate:
+  desc: aggregate or not
+  value: !!bool False
 cut_point:
   desc: specify the model cut point
-  value: !!int 2
-lr:
-  desc: learning rate
-  value: !!float 0.25 # 0.25
+  value: !!int 3
+sl_lr:
+  desc: split learning rate
+  value: !!float 0.05 # 0.25
+adv_lr:
+  desc: adversarial learning rate
+  value: !!float 0.05
 percent:
   desc: proportion of data set used for training
-  value: !!float 0.25
+  value: !!float 1
 batch_size:
   desc: batch size
   value: !!int 64
@@ -17,15 +32,12 @@ global_round:
 local_epoch:
   desc: local iteration epoch
   value: !!int 2
-add_gan:
-  desc: use discriminator or not
-  value: !!bool True
 k:
   desc: discriminator update round
   value: !!float 0.25
 target_domain:
   desc: target domain (select a client as target domain, and the number here indicate client index)
   value: !!int 0
-ratio_gan:
-  desc: weight of gradient back propagated from discriminator
-  value: !!float -1
+ratio_disc:
+  desc: weight of gradient back propagated from discriminator. Note that this parameter should be non-negative.
+  value: !!float 20
