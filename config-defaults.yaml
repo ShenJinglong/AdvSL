@@ -4,7 +4,7 @@ model_type:
   value: !!str lenet # resnet18 or vgg16 or alexnet or lenet
 disc_type:
   desc: Specify the type of discriminator, whether it is multi-classifier or anchor or no discriminator
-  value: !!str mul # mul or anchor or none
+  value: !!str anchor # mul or anchor or none
 disc_mode:
   desc: set how discriminator works
   value: !!str gr # gr or normal
@@ -40,4 +40,4 @@ target_domain:
   value: !!int 0
 ratio_disc:
   desc: weight of gradient back propagated from discriminator. Note that this parameter should be non-negative.
-  value: !!float 20
+  value: !!float 40
