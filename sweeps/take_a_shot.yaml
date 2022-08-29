@@ -1,6 +1,6 @@
 program: main.py
 project: AdvSL
-entity: sjinglong
+entity: advsl
 method: grid
 name: take_a_shot
 parameters:
