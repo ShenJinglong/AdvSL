@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 wandb.init(
     project="AdvSL",
-    entity="sjinglong"
+    entity="advsl"
 ) # 我们使用wandb对仿真的参数和数据进行管理，并进行可视化
 config = wandb.config
 DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu" # 选择训练设备
