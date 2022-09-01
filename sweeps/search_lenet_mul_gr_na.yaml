@@ -1,0 +1,46 @@
+program: main.py
+project: AdvSL
+entity: advsl
+method: bayes
+metric:
+  name: total_acc
+  goal: maximize
+early_terminate:
+  type: hyperband
+  min_iter: 3
+name: search_lenet_mul_gr_na
+parameters:
+  model_type:
+    values: ["lenet"]
+  disc_type:
+    values: ["mul"]
+  disc_mode:
+    values: ["gr"]
+  aggregate:
+    values: [False]
+  cut_point:
+    values: [3]
+  sl_lr:
+    max: 0.1
+    min: 0.01
+    distribution: uniform
+  adv_lr:
+    max: 0.1
+    min: 0.01
+    distribution: uniform
+  percent:
+    values: [1]
+  batch_size:
+    values: [64]
+  global_round:
+    values: [15]
+  local_epoch:
+    values: [2]
+  k:
+    values: [0.25]
+  target_domain:
+    values: [0]
+  ratio_disc:
+    max: 60
+    min: 20
+    distribution: uniform

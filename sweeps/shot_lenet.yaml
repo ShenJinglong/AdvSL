@@ -1,0 +1,18 @@
+program: main.py
+project: AdvSL
+entity: advsl
+method: grid
+name: shot_lenet
+parameters:
+  model_type:
+    values: [lenet]
+  disc_type:
+    values: [mul, anchor, none]
+  aggregate:
+    values: [True, False]
+  adv_lr:
+    values: [0.05]
+  ratio_disc:
+    values: [40]
+  sl_lr:
+    values: [0.1]

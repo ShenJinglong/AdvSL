@@ -16,7 +16,7 @@ cut_point:
   value: !!int 3
 sl_lr:
   desc: split learning rate
-  value: !!float 0.05 # 0.25
+  value: !!float 0.1 # 0.25
 adv_lr:
   desc: adversarial learning rate
   value: !!float 0.05
@@ -28,7 +28,7 @@ batch_size:
   value: !!int 64
 global_round:
   desc: global training round
-  value: !!int 100
+  value: !!int 50
 local_epoch:
   desc: local iteration epoch
   value: !!int 2

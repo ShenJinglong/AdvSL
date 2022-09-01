@@ -29,13 +29,13 @@ else:
     logging.info(f"@@ SL [{DEVICE}]")
 
 # 准备数据集
-dataset_manager = DatasetManager("./datasets/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
+dataset_manager = DatasetManager("~/datasets/personal/advsl/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
 # 设置训练使用的数据集，列表中数据集的数量也决定了参与训练的客户端的数量
 datasets = [
     "MNIST",            # 原数据集
-    # "SVHN",
-    # "USPS",
-    # "SynthDigits",
+    "SVHN",
+    "USPS",
+    "SynthDigits",
     "MNIST_M",
     # "MNIST-blur",       # 高斯模糊后的数据集（高斯核随机选择为1，3，5，7）
     # "SVHN-blur",
