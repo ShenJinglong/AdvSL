@@ -13,6 +13,6 @@ parameters:
   adv_lr:
     values: [0.05]
   ratio_disc:
-    values: [40]
+    values: [80]
   sl_lr:
-    values: [0.1]
+    values: [0.05]
