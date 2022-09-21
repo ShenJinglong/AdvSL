@@ -13,13 +13,13 @@ aggregate:
   value: !!bool False
 cut_point:
   desc: specify the model cut point
-  value: !!int 3
+  value: !!int 4
 sl_lr:
   desc: split learning rate
-  value: !!float 0.05 # 0.25
+  value: !!float 0.01 # 0.25
 adv_lr:
   desc: adversarial learning rate
-  value: !!float 0.05
+  value: !!float 0.01
 percent:
   desc: proportion of data set used for training
   value: !!float 1
@@ -40,4 +40,4 @@ target_domain:
   value: !!int 0
 ratio_disc:
   desc: weight of gradient back propagated from discriminator. Note that this parameter should be non-negative.
-  value: !!float 40
+  value: !!float 25

@@ -1,0 +1,18 @@
+program: main.py
+project: AdvSL
+entity: advsl
+method: grid
+name: shot_resnet
+parameters:
+  model_type:
+    values: [resnet18]
+  disc_type:
+    values: [mul, anchor, none]
+  aggregate:
+    values: [False]
+  adv_lr:
+    values: [0.01]
+  ratio_disc:
+    values: [25]
+  sl_lr:
+    values: [0.01]
