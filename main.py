@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
                 # 10个batch，1次test
                 batch_counter += 1
-                if batch_counter % 10 == 0:
+                if batch_counter % 50 == 0:
                     accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
                     # 日志
                     logging_info = f"(round {round}, batch {batch_counter}) acc:"

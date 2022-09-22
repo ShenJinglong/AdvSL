@@ -9,7 +9,7 @@ parameters:
   disc_type:
     values: [mul, anchor, none]
   aggregate:
-    values: [True, False]
+    values: [False, True]
   adv_lr:
     values: [0.05]
   ratio_disc:

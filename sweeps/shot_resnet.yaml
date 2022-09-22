@@ -16,3 +16,19 @@ parameters:
     values: [25]
   sl_lr:
     values: [0.01]
+  disc_mode:
+    values: [gr]
+  cut_point:
+    values: [4]
+  percent:
+    values: [0.269]
+  batch_size:
+    values: [64]
+  global_round:
+    values: [50]
+  local_epoch:
+    values: [2]
+  k:
+    values: [0.25]
+  target_domain:
+    values: [0]
