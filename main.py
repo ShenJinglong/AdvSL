@@ -42,11 +42,11 @@ datasets = [
     "USPS-blur",
     "SynthDigits-blur",
     "MNIST_M-blur",
-    "MNIST-rot",        # 随机旋转后的数据集（随机进行小于60度的旋转）
-    "SVHN-rot",
-    "USPS-rot",
-    "SynthDigits-rot",
-    "MNIST_M-rot",
+    # "MNIST-rot",        # 随机旋转后的数据集（随机进行小于60度的旋转）
+    # "SVHN-rot",
+    # "USPS-rot",
+    # "SynthDigits-rot",
+    # "MNIST_M-rot",
     "MNIST-noise",      # 添加了高斯白噪声后的数据集 (mean:0, std: 0.2)
     "SVHN-noise",
     "USPS-noise",
@@ -57,11 +57,11 @@ datasets = [
     "USPS-bright",
     "SynthDigits-bright",
     "MNIST_M-bright",
-    "MNIST-hue",        # 随机调整了色相的数据集
-    "SVHN-hue",
-    "USPS-hue",
-    "SynthDigits-hue",
-    "MNIST_M-hue",
+    # "MNIST-hue",        # 随机调整了色相的数据集
+    # "SVHN-hue",
+    # "USPS-hue",
+    # "SynthDigits-hue",
+    # "MNIST_M-hue",
 ]
 num_client = len(datasets)
 trainloaders = dataset_manager.get_trainloaders(datasets)

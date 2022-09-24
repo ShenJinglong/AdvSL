@@ -2,7 +2,7 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: grid
-name: shot_resnet_30
+name: shot_resnet_20
 parameters:
   model_type:
     values: [resnet18]
