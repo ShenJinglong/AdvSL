@@ -134,3 +134,4 @@ images/
 data/
 wandb/
 GAN.py
+*.out

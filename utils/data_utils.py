@@ -131,7 +131,7 @@ class DatasetManager():
                 batch_size = self.__batch_size,
                 shuffle=True,
                 drop_last = True,
-                pin_memory = True,
+                pin_memory = False,
                 num_workers = 0
             ))
         return trainloaders
@@ -155,7 +155,7 @@ class DatasetManager():
                 batch_size = self.__batch_size,
                 shuffle=False,
                 drop_last = False,
-                pin_memory = True,
+                pin_memory = False,
                 num_workers = 0
             ))
         return testloaders
