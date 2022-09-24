@@ -132,7 +132,7 @@ class DatasetManager():
                 shuffle=True,
                 drop_last = True,
                 pin_memory = False,
-                num_workers = 0
+                num_workers = 4
             ))
         return trainloaders
 
@@ -156,7 +156,7 @@ class DatasetManager():
                 shuffle=False,
                 drop_last = False,
                 pin_memory = False,
-                num_workers = 0
+                num_workers = 4
             ))
         return testloaders
 
