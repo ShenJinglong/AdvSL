@@ -2,10 +2,10 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: grid
-name: shot_resnet_20
+name: shot_vgg_5
 parameters:
   model_type:
-    values: [resnet18]
+    values: [vgg16]
   disc_type:
     values: [mul, anchor, none]
   aggregate:
