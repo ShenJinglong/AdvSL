@@ -32,31 +32,31 @@ else:
 dataset_manager = DatasetManager("/home/sjinglong/datasets/personal/advsl/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
 # 设置训练使用的数据集，列表中数据集的数量也决定了参与训练的客户端的数量
 datasets = [
-    "MNIST",            # 原数据集
+    "MNIST",            ## 原数据集
     "SVHN",
     "USPS",
     "SynthDigits",
     "MNIST_M",
-    "MNIST-blur",       # 高斯模糊后的数据集（高斯核随机选择为1，3，5，7）
-    "SVHN-blur",
-    "USPS-blur",
-    "SynthDigits-blur",
-    "MNIST_M-blur",
+    # "MNIST-blur",       ## 高斯模糊后的数据集（高斯核随机选择为1，3，5，7）
+    # "SVHN-blur",
+    # "USPS-blur",
+    # "SynthDigits-blur",
+    # "MNIST_M-blur",
     # "MNIST-rot",        # 随机旋转后的数据集（随机进行小于60度的旋转）
     # "SVHN-rot",
     # "USPS-rot",
     # "SynthDigits-rot",
     # "MNIST_M-rot",
-    "MNIST-noise",      # 添加了高斯白噪声后的数据集 (mean:0, std: 0.2)
-    "SVHN-noise",
-    "USPS-noise",
-    "SynthDigits-noise",
-    "MNIST_M-noise",
-    "MNIST-bright",     # 随机调整了亮度的数据集
-    "SVHN-bright",
-    "USPS-bright",
-    "SynthDigits-bright",
-    "MNIST_M-bright",
+    # "MNIST-noise",      ## 添加了高斯白噪声后的数据集 (mean:0, std: 0.2)
+    # "SVHN-noise",
+    # "USPS-noise",
+    # "SynthDigits-noise",
+    # "MNIST_M-noise",
+    # "MNIST-bright",     ## 随机调整了亮度的数据集
+    # "SVHN-bright",
+    # "USPS-bright",
+    # "SynthDigits-bright",
+    # "MNIST_M-bright",
     # "MNIST-hue",        # 随机调整了色相的数据集
     # "SVHN-hue",
     # "USPS-hue",
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
                 # 10个batch，1次test
                 batch_counter += 1
-                if batch_counter % 50 == 0:
+                if batch_counter % 10 == 0:
                     accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
                     # 日志
                     logging_info = f"(round {round}, batch {batch_counter}) acc:"
