@@ -1,6 +1,8 @@
 # coding=utf-8
 
+from typing import Callable, List, Optional
 import torch
+import torchvision
 from model.ModelBase import ModelBase
 
 class BasicBlock(torch.nn.Module):
@@ -33,7 +35,7 @@ class BasicBlock(torch.nn.Module):
         return y
 
 class ResNet18_Mnist(ModelBase):
-    def __init__(self) -> None:
+    def __init__(self, num_classes: int = 10) -> None:
         super().__init__()
         self._blocks = torch.nn.ModuleList([
             torch.nn.Sequential(
@@ -52,7 +54,7 @@ class ResNet18_Mnist(ModelBase):
             torch.nn.Sequential(
                 torch.nn.AvgPool2d(kernel_size=4, stride=1),
                 torch.nn.Flatten(),
-                torch.nn.Linear(512, 10)
+                torch.nn.Linear(512, num_classes)
             )                               # 10
         ])
         self.block_num = len(self._blocks)
@@ -65,6 +67,45 @@ class ResNet18_Mnist(ModelBase):
             elif isinstance(m, torch.nn.BatchNorm2d):
                 torch.nn.init.constant_(m.weight, 1.0)
                 torch.nn.init.constant_(m.bias, 0.0)
+
+class ResNet18(torchvision.models.resnet.ResNet, ModelBase):
+    def __init__(self,
+        num_classes: int = 1000,
+        zero_init_residual: bool = False,
+        groups: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: Optional[List[bool]] = None,
+        norm_layer: Optional[Callable[..., torch.nn.Module]] = None
+    ) -> None:
+        super().__init__(torchvision.models.resnet.BasicBlock, [2,2,2,2], num_classes, zero_init_residual, groups, width_per_group, replace_stride_with_dilation, norm_layer)
+        
+        modules = dict(self.named_modules())
+        self._blocks = torch.nn.ModuleList([
+            torch.nn.Sequential(
+                modules['conv1'], modules['bn1'], modules['relu'], modules['maxpool']
+            ),
+            modules['layer1.0'],
+            modules['layer1.1'],
+            modules['layer2.0'],
+            modules['layer2.1'],
+            modules['layer3.0'],
+            modules['layer3.1'],
+            modules['layer4.0'],
+            modules['layer4.1'],
+            torch.nn.Sequential(
+                modules['avgpool'],
+                torch.nn.Flatten(),
+                modules['fc']
+            )
+        ])
+        self.block_num = len(self._blocks)
+
+    def forward(self,
+        x:torch.Tensor,
+        start:int = 0,
+        stop:int = None
+    ) -> torch.Tensor:
+        return ModelBase.forward(self, x, start, stop)
 
 if __name__ == "__main__":
     model = ResNet18_Mnist()
