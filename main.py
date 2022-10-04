@@ -1,12 +1,13 @@
 
 import copy
+import os
 import wandb
 import torch
 import logging
 
 from cluster import ClusterUnionAnchor, ClusterUnionMultiout
-from utils.data_utils import DatasetManager, seed_torch
-from utils.model_utils import aggregate_model, eval_model, ratio_model_grad, eval_model_with_mutlitest, construct_model
+from utils.data_utils import DatasetManager
+from utils.model_utils import aggregate_model, ratio_model_grad, eval_model_with_mutlitest, construct_model
 from utils.hardware_utils import get_free_gpu
 
 # 设置随机数种子
@@ -15,6 +16,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+logging.getLogger('PIL').setLevel(logging.INFO)
 wandb.init(
     project="AdvSL",
     entity="advsl"
@@ -29,52 +31,22 @@ else:
     logging.info(f"@@ SL [{DEVICE}]")
 
 # 准备数据集
-dataset_manager = DatasetManager("/home/sjinglong/datasets/personal/advsl/", config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
+dataset_manager = DatasetManager(os.path.abspath(config.dataset_path), config.dataset_name, config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
 # 设置训练使用的数据集，列表中数据集的数量也决定了参与训练的客户端的数量
-datasets = [
-    "MNIST",            ## 原数据集
-    "SVHN",
-    "USPS",
-    "SynthDigits",
-    "MNIST_M",
-    # "MNIST-blur",       ## 高斯模糊后的数据集（高斯核随机选择为1，3，5，7）
-    # "SVHN-blur",
-    # "USPS-blur",
-    # "SynthDigits-blur",
-    # "MNIST_M-blur",
-    # "MNIST-rot",        # 随机旋转后的数据集（随机进行小于60度的旋转）
-    # "SVHN-rot",
-    # "USPS-rot",
-    # "SynthDigits-rot",
-    # "MNIST_M-rot",
-    # "MNIST-noise",      ## 添加了高斯白噪声后的数据集 (mean:0, std: 0.2)
-    # "SVHN-noise",
-    # "USPS-noise",
-    # "SynthDigits-noise",
-    # "MNIST_M-noise",
-    # "MNIST-bright",     ## 随机调整了亮度的数据集
-    # "SVHN-bright",
-    # "USPS-bright",
-    # "SynthDigits-bright",
-    # "MNIST_M-bright",
-    # "MNIST-hue",        # 随机调整了色相的数据集
-    # "SVHN-hue",
-    # "USPS-hue",
-    # "SynthDigits-hue",
-    # "MNIST_M-hue",
-]
+datasets = config.domain
 num_client = len(datasets)
 trainloaders = dataset_manager.get_trainloaders(datasets)
 testloaders = dataset_manager.get_testloaders(datasets)
 logging.debug(f"{num_client} clients with datasets {datasets}.")
 
 # 准备模型
-global_model = construct_model(config.model_type).to(DEVICE)
+global_model = construct_model(config.model_type, config.dataset_name).to(DEVICE)
 client_globalmodel = global_model.get_splited_module(config.cut_point)[0] # client 侧的全局模型
 server_globalmodel = global_model.get_splited_module(config.cut_point)[1] # server 侧的全局模型
 client_localmodels = [copy.deepcopy(client_globalmodel) for _ in range(num_client)] # client 侧的本地模型
 with torch.no_grad():
-    fm_size = client_localmodels[0](torch.randn((1, 3, 28, 28), device=DEVICE)).size() # 获取切割层输出的 feature map 的 size
+    dummy_sample = torch.randn((1, 3, 28, 28), device=DEVICE) if config.dataset_name == "digits" else torch.randn((1, 3, 28, 28), device=DEVICE)
+    fm_size = client_localmodels[0](dummy_sample).size() # 获取切割层输出的 feature map 的 size
 logging.debug(f"{config.model_type} is trained which is splitted between layer {config.cut_point} and {config.cut_point+1}")
 
 # 优化器，loss等
@@ -158,7 +130,7 @@ if __name__ == "__main__":
 
                 # 10个batch，1次test
                 batch_counter += 1
-                if batch_counter % 10 == 0:
+                if batch_counter % config.test_freq == 0:
                     accs = [eval_model_with_mutlitest(client_localmodel, server_globalmodel, testloaders) for client_localmodel in client_localmodels]
                     # 日志
                     logging_info = f"(round {round}, batch {batch_counter}) acc:"

@@ -1,10 +1,28 @@
 
+dataset_path:
+  desc: dataset path
+  value: !!str /home/sjinglong/datasets/personal/advsl/
+dataset_name:
+  desc: dataset name
+  # value: !!str office-caltech10 # domain-net or office-caltech10 or digits
+  value: !!str domain-net # domain-net or office-caltech10 or digits
+  # value: !!str digits # domain-net or office-caltech10 or digits
+domain:
+  desc: domain name of each client (also control client num)
+  value: [
+      # "MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M", ## 原数据集
+      # "MNIST-blur", "SVHN-blur", "USPS-blur", "SynthDigits-blur", "MNIST_M-blur", ## 高斯模糊后的数据集（高斯核随机选择为1，3，5，7）
+      # "MNIST-noise", "SVHN-noise", "USPS-noise", "SynthDigits-noise", "MNIST_M-noise", ## 添加了高斯白噪声后的数据集 (mean:0, std: 0.2)
+      # "MNIST-bright", "SVHN-bright", "USPS-bright", "SynthDigits-bright", "MNIST_M-bright",  ## 随机调整了亮度的数据集
+      # "caltech", "dslr", "webcam", "amazon", ## office-caltech10
+      "clipart", "real", "sketch", "quickdraw", "infograph", "painting", ## domain-net
+    ]
 model_type:
   desc: Specify the model to be trained
-  value: !!str lenet # resnet18 or vgg16 or alexnet or lenet
+  value: !!str resnet18 # resnet18 or vgg16 or alexnet or lenet
 disc_type:
   desc: Specify the type of discriminator, whether it is multi-classifier or anchor or no discriminator
-  value: !!str anchor # mul or anchor or none
+  value: !!str none # mul or anchor or none
 disc_mode:
   desc: set how discriminator works
   value: !!str gr # gr or normal
@@ -41,3 +59,6 @@ target_domain:
 ratio_disc:
   desc: weight of gradient back propagated from discriminator. Note that this parameter should be non-negative.
   value: !!float 25
+test_freq:
+  desc: test frequency
+  value: !!int 10
