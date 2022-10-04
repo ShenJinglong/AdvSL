@@ -4,18 +4,21 @@ import copy
 from typing import List
 import torch
 
-from model.resnet import ResNet18_Mnist
-from model.vgg import VGG16_Mnist
+from model.resnet import ResNet18_Mnist, ResNet18
+from model.vgg import VGG16_Mnist, VGG16
 from model.alexnet import AlexNet_Mnist
 from model.lenet import LeNet_Mnist
 
 def construct_model(
     model_type: str,
+    dataset_name: str,
 ) -> torch.nn.Module:
     if model_type == "vgg16":
-        return VGG16_Mnist()
+        # return VGG16_Mnist() if dataset_name == "digits" else VGG16_Mnist()
+        return VGG16_Mnist(num_classes=345) if dataset_name == "domain-net" else VGG16_Mnist
     elif model_type == "resnet18":
-        return ResNet18_Mnist()
+        # return ResNet18_Mnist() if dataset_name == "digits" else ResNet18_Mnist() # ResNet18(num_classes=10)
+        return ResNet18_Mnist(num_classes=345) if dataset_name == "domain-net" else ResNet18_Mnist()
     elif model_type == "alexnet":
         return AlexNet_Mnist()
     elif model_type == "lenet":

@@ -1,0 +1,34 @@
+program: main.py
+project: AdvSL
+entity: advsl
+method: grid
+name: shot_vgg_5
+parameters:
+  model_type:
+    values: [vgg16]
+  disc_type:
+    values: [mul, anchor, none]
+  aggregate:
+    values: [False]
+  adv_lr:
+    values: [0.01]
+  ratio_disc:
+    values: [25]
+  sl_lr:
+    values: [0.01]
+  disc_mode:
+    values: [gr]
+  cut_point:
+    values: [4]
+  percent:
+    values: [0.269]
+  batch_size:
+    values: [64]
+  global_round:
+    values: [100]
+  local_epoch:
+    values: [2]
+  k:
+    values: [0.25]
+  target_domain:
+    values: [0]

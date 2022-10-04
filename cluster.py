@@ -43,14 +43,13 @@ class ClusterUnionAnchor:
             anchor_label = torch.ones((anchor_fm.size(0), 1), device=self.__device)
             float_labels = [torch.zeros((float_fm.size(0), 1), device=self.__device) for float_fm in float_fms]
             for _ in range(int(self.__update_counter)):
-                self.__optim.zero_grad()
                 for float_fm, float_label in zip(float_fms, float_labels):
+                    self.__optim.zero_grad()
                     float_loss = self.__loss_fn(self.__discriminator(float_fm.detach()), float_label)
                     anchor_loss = self.__loss_fn(self.__discriminator(anchor_fm.detach()), anchor_label)
                     loss = (float_loss + anchor_loss) / 2
                     loss.backward()
-                ratio_model_grad(self.__discriminator, 1./len(float_fms))
-                self.__optim.step()
+                    self.__optim.step()
             self.__update_counter = 0
         self.__optim.zero_grad()
         gene_losses = [self.__loss_fn(self.__discriminator(float_fm), torch.ones((float_fm.size(0), 1), device=self.__device)) for float_fm in float_fms]
@@ -67,7 +66,6 @@ class ClusterUnionAnchor:
         float_losses = [self.__loss_fn(self.__discriminator(float_fm), float_label) for float_fm, float_label in zip(float_fms, float_labels)]
         anchor_loss.backward()
         [float_loss.backward(retain_graph=True) for float_loss in float_losses]
-        ratio_model_grad(self.__discriminator, 1./(len(float_fms) + 1))
         self.__optim.step()
 
     # def update_gr_(self,
@@ -120,7 +118,6 @@ class ClusterUnionMultiout:
         labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
         losses = [self.__loss_fn(self.__discriminator(fm), label) for fm, label in zip(fms, labels)]
         [loss.backward(retain_graph=True) for loss in losses]
-        ratio_model_grad(self.__discriminator, 1./len(fms))
         self.__optim.step()
 
     def __update_normal(self,
@@ -135,12 +132,11 @@ class ClusterUnionMultiout:
         if self.__update_counter >= 1:
             labels = [torch.ones((fm.size(0),), dtype=torch.int64, device=self.__device)*i for i, fm in enumerate(fms)]
             for _ in range(int(self.__update_counter)):
-                self.__optim.zero_grad()
                 for fm, label in zip(fms, labels):
+                    self.__optim.zero_grad()
                     loss = self.__loss_fn(self.__discriminator(fm.detach()), label)
                     loss.backward()
-                ratio_model_grad(self.__discriminator, 1./len(fms))
-                self.__optim.step()
+                    self.__optim.step()
                 logging.info("discriminator updated ...")
             self.__update_counter = 0
 

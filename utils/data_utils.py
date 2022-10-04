@@ -5,31 +5,28 @@ from typing import List
 import numpy as np
 import torch
 import torchvision
-from torch.utils.data import Dataset
 from PIL import Image
 
-class DigitsDataset(Dataset):
+class DigitsDataset(torch.utils.data.Dataset):
     # https://github.com/med-air/FedBN/blob/master/utils/data_utils.py
-    def __init__(self, data_path, channels, percent=0.1, filename=None, train=True, transform=None):
-        if filename is None:
-            if train:
-                if percent >= 0.1:
-                    for part in range(int(percent*10)):
-                        if part == 0:
-                            self.images, self.labels = np.load(os.path.join(data_path, 'partitions/train_part{}.pkl'.format(part)), allow_pickle=True)
-                        else:
-                            images, labels = np.load(os.path.join(data_path, 'partitions/train_part{}.pkl'.format(part)), allow_pickle=True)
-                            self.images = np.concatenate([self.images,images], axis=0)
-                            self.labels = np.concatenate([self.labels,labels], axis=0)
-                else:
-                    self.images, self.labels = np.load(os.path.join(data_path, 'partitions/train_part0.pkl'), allow_pickle=True)
-                    data_len = int(self.images.shape[0] * percent*10)
-                    self.images = self.images[:data_len]
-                    self.labels = self.labels[:data_len]
+    def __init__(self, root_path, domain, channels, percent=0.1, train=True, transform=None):
+        data_path = os.path.join(root_path, domain)
+        if train:
+            if percent >= 0.1:
+                for part in range(int(percent*10)):
+                    if part == 0:
+                        self.images, self.labels = np.load(os.path.join(data_path, 'partitions/train_part{}.pkl'.format(part)), allow_pickle=True)
+                    else:
+                        images, labels = np.load(os.path.join(data_path, 'partitions/train_part{}.pkl'.format(part)), allow_pickle=True)
+                        self.images = np.concatenate([self.images,images], axis=0)
+                        self.labels = np.concatenate([self.labels,labels], axis=0)
             else:
-                self.images, self.labels = np.load(os.path.join(data_path, 'test.pkl'), allow_pickle=True)
+                self.images, self.labels = np.load(os.path.join(data_path, 'partitions/train_part0.pkl'), allow_pickle=True)
+                data_len = int(self.images.shape[0] * percent*10)
+                self.images = self.images[:data_len]
+                self.labels = self.labels[:data_len]
         else:
-            self.images, self.labels = np.load(os.path.join(data_path, filename), allow_pickle=True)
+            self.images, self.labels = np.load(os.path.join(data_path, 'test.pkl'), allow_pickle=True)
 
         self.transform = transform
         self.channels = channels
@@ -53,30 +50,113 @@ class DigitsDataset(Dataset):
 
         return image, label
 
+class OfficeCaltech10Dataset(torch.utils.data.Dataset):
+    def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
+        super().__init__()
+        self.__image_names, self.__labels = [], []
+        self.__transform = transform
+        self.__root_path = root_path
+        self.__domain = domain
+        classes = ["back_pack", "bike", "calculator", "headphones", "keyboard", "laptop_computer", "monitor", "mouse", "mug", "projector"]
+        for i, class_name in enumerate(classes):
+            filenames = os.listdir(os.path.join(root_path, domain, class_name))
+            if train:
+                filenames = filenames[:int(len(filenames)*0.9)]
+                filenames = filenames[:int(len(filenames)*percent)]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+            else:
+                filenames = filenames[int(len(filenames)*0.9):]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+
+    def __len__(self):
+        return len(self.__image_names)
+
+    def __getitem__(self, idx):
+        with Image.open(os.path.join(self.__root_path, self.__domain, self.__image_names[idx])) as img:
+            if self.__transform is not None:
+                img = self.__transform(img)
+            return img, self.__labels[idx]
+
+class DomainNetDataset(torch.utils.data.Dataset):
+    def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
+        super().__init__()
+        self.__image_names, self.__labels = [], []
+        self.__transform = transform
+        self.__root_path = root_path
+        self.__domain = domain
+        classes = os.listdir(os.path.join(root_path, domain, domain))
+        for i, class_name in enumerate(classes):
+            filenames = os.listdir(os.path.join(root_path, domain, domain, class_name))
+            if train:
+                filenames = filenames[:int(len(filenames)*0.9)]
+                filenames = filenames[:int(len(filenames)*percent)]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+            else:
+                filenames = filenames[int(len(filenames)*0.9):]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+
+    def __len__(self):
+        return len(self.__image_names)
+
+    def __getitem__(self, idx):
+        with Image.open(os.path.join(self.__root_path, self.__domain, self.__domain, self.__image_names[idx])) as img:
+            if self.__transform is not None:
+                img = self.__transform(img)
+            return img, self.__labels[idx]
+
 class DatasetManager():
     def __init__(self,
-        path: str,
+        root_path: str,
+        dataset_name: str,
         percent: float,
         batch_size: float
     ) -> None:
         self.__percent = percent
         self.__batch_size = batch_size
-        self.__path = path
+        self.__root_path = root_path
+        self.__dataset_name = dataset_name
+        if dataset_name == "digits":
+            self.__Dataset = DigitsDataset
+        elif dataset_name == "office-caltech10":
+            self.__Dataset = OfficeCaltech10Dataset
+        elif dataset_name == "domain-net":
+            self.__Dataset = DomainNetDataset
+        digits_transform = [
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))   
+        ]
+        office_caltech10_transform = [
+            torchvision.transforms.Resize((28, 28)),
+            torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
+            torchvision.transforms.PILToTensor(),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+        domain_net_transform = [
+            torchvision.transforms.Resize((28, 28)),
+            torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
+            torchvision.transforms.PILToTensor(),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+
         self.__datasets = {
             "MNIST": {
                 "channel": 1,
                 "transform": [
                     torchvision.transforms.Grayscale(num_output_channels=3),
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                    *digits_transform
                 ]
             },
             "SVHN": {
                 "channel": 3,
                 "transform": [
                     torchvision.transforms.Resize((28, 28)),
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))    
+                    *digits_transform
                 ]
             },
             "USPS": {
@@ -84,26 +164,61 @@ class DatasetManager():
                 "transform": [
                     torchvision.transforms.Resize((28, 28)),
                     torchvision.transforms.Grayscale(num_output_channels=3),
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                    *digits_transform
                 ]
             },
             "SynthDigits": {
                 "channel": 3,
                 "transform": [
                     torchvision.transforms.Resize((28, 28)),
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                    *digits_transform
                 ]
             },
             "MNIST_M": {
                 "channel": 3,
-                "transform": [
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                ]
+                "transform": digits_transform
             },
-        }
+            "amazon": {
+                "channel": 3,
+                "transform": office_caltech10_transform
+            },
+            "caltech": {
+                "channel": 3,
+                "transform": office_caltech10_transform
+            },
+            "dslr": {
+                "channel": 3,
+                "transform": office_caltech10_transform
+            },
+            "webcam": {
+                "channel": 3,
+                "transform": office_caltech10_transform
+            },
+            "clipart": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+            "real": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+            "sketch": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+            "quickdraw": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+            "infograph": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+            "painting": {
+                "channel": 3,
+                "transform": domain_net_transform
+            },
+        } 
         self.__aug_transforms = {
             "blur": [torchvision.transforms.GaussianBlur(7)],
             "rot": [torchvision.transforms.RandomRotation(60)],
@@ -119,8 +234,9 @@ class DatasetManager():
         for name in names:
             substrs = name.split("-")
             trainloaders.append(torch.utils.data.DataLoader(
-                DigitsDataset(
-                    data_path=os.path.join(self.__path, substrs[0]),
+                self.__Dataset(
+                    root_path=os.path.join(self.__root_path, self.__dataset_name),
+                    domain=substrs[0],
                     channels=self.__datasets[substrs[0]]["channel"],
                     percent=self.__percent,
                     train=True,
@@ -130,7 +246,9 @@ class DatasetManager():
                 ),
                 batch_size = self.__batch_size,
                 shuffle=True,
-                drop_last = True
+                drop_last = True,
+                pin_memory = False,
+                num_workers = 4
             ))
         return trainloaders
 
@@ -141,8 +259,9 @@ class DatasetManager():
         for name in names:
             substrs = name.split("-")
             testloaders.append(torch.utils.data.DataLoader(
-                DigitsDataset(
-                    data_path=os.path.join(self.__path, substrs[0]),
+                self.__Dataset(
+                    root_path=os.path.join(self.__root_path, self.__dataset_name),
+                    domain=substrs[0],
                     channels=self.__datasets[substrs[0]]["channel"],
                     percent=self.__percent,
                     train=False,
@@ -152,7 +271,9 @@ class DatasetManager():
                 ),
                 batch_size = self.__batch_size,
                 shuffle=False,
-                drop_last = False
+                drop_last = False,
+                pin_memory = False,
+                num_workers = 4
             ))
         return testloaders
 
