@@ -35,7 +35,7 @@ parameters:
   batch_size:
     values: [64]
   global_round:
-    values: [100]
+    values: [3000]
   local_epoch:
     values: [2]
   k:
@@ -43,4 +43,4 @@ parameters:
   target_domain:
     values: [0]
   test_freq:
-    values: [50]
+    values: [10]

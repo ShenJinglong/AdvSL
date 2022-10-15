@@ -15,7 +15,7 @@ def construct_model(
 ) -> torch.nn.Module:
     if model_type == "vgg16":
         # return VGG16_Mnist() if dataset_name == "digits" else VGG16_Mnist()
-        return VGG16_Mnist(num_classes=345) if dataset_name == "domain-net" else VGG16_Mnist
+        return VGG16_Mnist(num_classes=345) if dataset_name == "domain-net" else VGG16_Mnist()
     elif model_type == "resnet18":
         # return ResNet18_Mnist() if dataset_name == "digits" else ResNet18_Mnist() # ResNet18(num_classes=10)
         return ResNet18_Mnist(num_classes=345) if dataset_name == "domain-net" else ResNet18_Mnist()
