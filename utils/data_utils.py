@@ -130,14 +130,14 @@ class DatasetManager():
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))   
         ]
         office_caltech10_transform = [
-            torchvision.transforms.Resize((28, 28)),
+            torchvision.transforms.Resize((64, 64)),
             torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
             torchvision.transforms.PILToTensor(),
             torchvision.transforms.ConvertImageDtype(torch.float),
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
         domain_net_transform = [
-            torchvision.transforms.Resize((28, 28)),
+            torchvision.transforms.Resize((64, 64)),
             torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
             torchvision.transforms.PILToTensor(),
             torchvision.transforms.ConvertImageDtype(torch.float),

@@ -31,7 +31,7 @@ else:
     logging.info(f"@@ SL [{DEVICE}]")
 
 # 准备数据集
-dataset_manager = DatasetManager(os.path.abspath(config.dataset_path), config.dataset_name, config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
+dataset_manager = DatasetManager(os.path.abspath(os.environ.get("ADVSL_DATASET_PATH")), config.dataset_name, config.percent, config.batch_size) # 参数中的 percent 指定用数据集中的百分之多少进行训练
 # 设置训练使用的数据集，列表中数据集的数量也决定了参与训练的客户端的数量
 datasets = config.domain
 num_client = len(datasets)
@@ -45,7 +45,7 @@ client_globalmodel = global_model.get_splited_module(config.cut_point)[0] # clie
 server_globalmodel = global_model.get_splited_module(config.cut_point)[1] # server 侧的全局模型
 client_localmodels = [copy.deepcopy(client_globalmodel) for _ in range(num_client)] # client 侧的本地模型
 with torch.no_grad():
-    dummy_sample = torch.randn((1, 3, 28, 28), device=DEVICE) if config.dataset_name == "digits" else torch.randn((1, 3, 28, 28), device=DEVICE)
+    dummy_sample = torch.randn((1, 3, 28, 28), device=DEVICE) if config.dataset_name == "digits" else torch.randn((1, 3, 64, 64), device=DEVICE)
     fm_size = client_localmodels[0](dummy_sample).size() # 获取切割层输出的 feature map 的 size
 logging.debug(f"{config.model_type} is trained which is splitted between layer {config.cut_point} and {config.cut_point+1}")
 

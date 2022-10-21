@@ -14,11 +14,23 @@ def construct_model(
     dataset_name: str,
 ) -> torch.nn.Module:
     if model_type == "vgg16":
-        # return VGG16_Mnist() if dataset_name == "digits" else VGG16_Mnist()
-        return VGG16_Mnist(num_classes=345) if dataset_name == "domain-net" else VGG16_Mnist()
+        if dataset_name == "digits":
+            return VGG16_Mnist(num_classes=10)
+        elif dataset_name == "office-caltech10":
+            return VGG16(num_classes=10)
+        elif dataset_name == "domain-net":
+            return VGG16(num_classes=345)
+        else:
+            raise ValueError(f"Unrecognized dataset_name `{dataset_name}`")
     elif model_type == "resnet18":
-        # return ResNet18_Mnist() if dataset_name == "digits" else ResNet18_Mnist() # ResNet18(num_classes=10)
-        return ResNet18_Mnist(num_classes=345) if dataset_name == "domain-net" else ResNet18_Mnist()
+        if dataset_name == "digits":
+            return ResNet18_Mnist(num_classes=10)
+        elif dataset_name == "office-caltech10":
+            return ResNet18(num_classes=10)
+        elif dataset_name == "domain-net":
+            return ResNet18(num_classes=345)
+        else:
+            raise ValueError(f"Unrecognized dataset_name `{dataset_name}`")
     elif model_type == "alexnet":
         return AlexNet_Mnist()
     elif model_type == "lenet":

@@ -136,3 +136,4 @@ wandb/
 GAN.py
 *.out
 test.py
+logs/

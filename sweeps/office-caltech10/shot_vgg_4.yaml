@@ -4,8 +4,6 @@ entity: advsl
 method: grid
 name: office_caltech10_shot_vgg_4
 parameters:
-  dataset_path:
-    values: [/home/sjinglong/datasets/personal/advsl/]
   dataset_name:
     values: [office-caltech10]
   domain:
@@ -31,7 +29,7 @@ parameters:
   batch_size:
     values: [64]
   global_round:
-    values: [100]
+    values: [3000]
   local_epoch:
     values: [2]
   k:

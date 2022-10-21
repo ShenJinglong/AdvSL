@@ -2,15 +2,16 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: grid
-name: office_caltech10_shot_vgg_16
+name: digits_shot_vgg_20
 parameters:
   dataset_name:
-    values: [office-caltech10]
+    values: [digits]
   domain:
-    values: [["caltech", "dslr", "webcam", "amazon",
-              "caltech-blur", "dslr-blur", "webcam-blur", "amazon-blur",
-              "caltech-noise", "dslr-noise", "webcam-noise", "amazon-noise",
-              "caltech-bright", "dslr-bright", "webcam-bright", "amazon-bright"
+    values: [[
+              "MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M",
+              "MNIST-blur", "SVHN-blur", "USPS-blur", "SynthDigits-blur", "MNIST_M-blur",
+              "MNIST-noise", "SVHN-noise", "USPS-noise", "SynthDigits-noise", "MNIST_M-noise",
+              "MNIST-bright", "SVHN-bright", "USPS-bright", "SynthDigits-bright", "MNIST_M-bright"
             ]]
   model_type:
     values: [vgg16]
@@ -33,7 +34,7 @@ parameters:
   batch_size:
     values: [64]
   global_round:
-    values: [3000]
+    values: [100]
   local_epoch:
     values: [2]
   k:

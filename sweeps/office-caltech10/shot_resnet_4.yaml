@@ -4,8 +4,6 @@ entity: advsl
 method: grid
 name: office_caltech10_shot_resnet_4
 parameters:
-  dataset_path:
-    values: [/home/sjinglong/datasets/personal/advsl/]
   dataset_name:
     values: [office-caltech10]
   domain:

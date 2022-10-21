@@ -2,10 +2,14 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: grid
-name: shot_resnet_20
+name: digits_shot_vgg_5
 parameters:
+  dataset_name:
+    values: [digits]
+  domain:
+    values: [["MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M"]]
   model_type:
-    values: [resnet18]
+    values: [vgg16]
   disc_type:
     values: [mul, anchor, none]
   aggregate:
@@ -21,7 +25,7 @@ parameters:
   cut_point:
     values: [4]
   percent:
-    values: [0.269]
+    values: [1]
   batch_size:
     values: [64]
   global_round:
@@ -32,3 +36,5 @@ parameters:
     values: [0.25]
   target_domain:
     values: [0]
+  test_freq:
+    values: [10]
