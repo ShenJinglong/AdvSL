@@ -1,7 +1,7 @@
 program: main.py
 project: AdvSL
 entity: advsl
-method: grid
+method: random
 name: digits_shot_vgg_5
 parameters:
   dataset_name:

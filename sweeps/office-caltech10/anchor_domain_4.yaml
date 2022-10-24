@@ -2,7 +2,7 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: random
-name: office_caltech10_shot_resnet_4
+name: office_caltech10_anchor_domain_4
 parameters:
   dataset_name:
     values: [office-caltech10]
@@ -11,7 +11,7 @@ parameters:
   model_type:
     values: [resnet18]
   disc_type:
-    values: [mul, anchor, none]
+    values: [anchor]
   aggregate:
     values: [False]
   adv_lr:
@@ -35,6 +35,6 @@ parameters:
   k:
     values: [0.25]
   target_domain:
-    values: [3]
+    values: [0, 1, 2, 3]
   test_freq:
     values: [10]
