@@ -79,6 +79,35 @@ class OfficeCaltech10Dataset(torch.utils.data.Dataset):
                 img = self.__transform(img)
             return img, self.__labels[idx]
 
+class OfficeHomeDataset(torch.utils.data.Dataset):
+    def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
+        super().__init__()
+        self.__image_names, self.__labels = [], []
+        self.__transform = transform
+        self.__root_path = root_path
+        self.__domain = domain
+        classes = os.listdir(os.path.join(root_path, domain))
+        for i, class_name in enumerate(classes):
+            filenames = os.listdir(os.path.join(root_path, domain, class_name))
+            if train:
+                filenames = filenames[:int(len(filenames)*0.9)]
+                filenames = filenames[:int(len(filenames)*percent)]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+            else:
+                filenames = filenames[int(len(filenames)*0.9):]
+                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+                self.__labels.extend([i]*len(filenames))
+    
+    def __len__(self):
+        return len(self.__image_names)
+
+    def __getitem__(self, idx):
+        with Image.open(os.path.join(self.__root_path, self.__domain, self.__image_names[idx])) as img:
+            if self.__transform is not None:
+                img = self.__transform(img)
+            return img, self.__labels[idx]
+
 class DomainNetDataset(torch.utils.data.Dataset):
     def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
         super().__init__()
@@ -123,6 +152,8 @@ class DatasetManager():
             self.__Dataset = DigitsDataset
         elif dataset_name == "office-caltech10":
             self.__Dataset = OfficeCaltech10Dataset
+        elif dataset_name == "office-home":
+            self.__Dataset = OfficeHomeDataset
         elif dataset_name == "domain-net":
             self.__Dataset = DomainNetDataset
         digits_transform = [
@@ -130,6 +161,13 @@ class DatasetManager():
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))   
         ]
         office_caltech10_transform = [
+            torchvision.transforms.Resize((64, 64)),
+            torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
+            torchvision.transforms.PILToTensor(),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+        office_home_transform = [
             torchvision.transforms.Resize((64, 64)),
             torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
             torchvision.transforms.PILToTensor(),
@@ -145,6 +183,7 @@ class DatasetManager():
         ]
 
         self.__datasets = {
+            ################################# digits
             "MNIST": {
                 "channel": 1,
                 "transform": [
@@ -178,6 +217,7 @@ class DatasetManager():
                 "channel": 3,
                 "transform": digits_transform
             },
+            ######################################## office-caltech10
             "amazon": {
                 "channel": 3,
                 "transform": office_caltech10_transform
@@ -194,6 +234,24 @@ class DatasetManager():
                 "channel": 3,
                 "transform": office_caltech10_transform
             },
+            ############################### office-home
+            "Art": {
+                "channel": 3,
+                "transform": office_home_transform
+            },
+            "Clipart": {
+                "channel": 3,
+                "transform": office_home_transform
+            },
+            "Product": {
+                "channel": 3,
+                "transform": office_home_transform
+            },
+            "RealWorld": {
+                "channel": 3,
+                "transform": office_home_transform
+            },
+            ########################################### domain-net
             "clipart": {
                 "channel": 3,
                 "transform": domain_net_transform

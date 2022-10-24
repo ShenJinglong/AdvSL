@@ -18,6 +18,8 @@ def construct_model(
             return VGG16_Mnist(num_classes=10)
         elif dataset_name == "office-caltech10":
             return VGG16(num_classes=10)
+        elif dataset_name == "office-home":
+            return VGG16(num_classes=65)
         elif dataset_name == "domain-net":
             return VGG16(num_classes=345)
         else:
@@ -27,6 +29,8 @@ def construct_model(
             return ResNet18_Mnist(num_classes=10)
         elif dataset_name == "office-caltech10":
             return ResNet18(num_classes=10)
+        elif dataset_name == "office-home":
+            return ResNet18(num_classes=65)
         elif dataset_name == "domain-net":
             return ResNet18(num_classes=345)
         else:
