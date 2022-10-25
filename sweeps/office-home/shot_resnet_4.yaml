@@ -29,7 +29,7 @@ parameters:
   batch_size:
     values: [64]
   global_round:
-    values: [300]
+    values: [500]
   local_epoch:
     values: [2]
   k:
