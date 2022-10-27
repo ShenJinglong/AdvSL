@@ -1,7 +1,7 @@
 program: main.py
 project: AdvSL
 entity: advsl
-method: random
+method: grid
 name: digits_shot_resnet_20
 parameters:
   dataset_name:
@@ -42,4 +42,4 @@ parameters:
   target_domain:
     values: [0]
   test_freq:
-    values: [10]
+    values: [20]

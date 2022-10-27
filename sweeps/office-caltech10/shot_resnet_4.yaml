@@ -1,7 +1,7 @@
 program: main.py
 project: AdvSL
 entity: advsl
-method: random
+method: grid
 name: office_caltech10_shot_resnet_4
 parameters:
   dataset_name:
@@ -37,4 +37,4 @@ parameters:
   target_domain:
     values: [3]
   test_freq:
-    values: [10]
+    values: [20]

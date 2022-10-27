@@ -1,7 +1,7 @@
 program: main.py
 project: AdvSL
 entity: advsl
-method: random
+method: grid
 name: office_home_shot_vgg_4
 parameters:
   dataset_name:
@@ -29,7 +29,7 @@ parameters:
   batch_size:
     values: [64]
   global_round:
-    values: [500]
+    values: [250]
   local_epoch:
     values: [2]
   k:
@@ -37,4 +37,4 @@ parameters:
   target_domain:
     values: [0]
   test_freq:
-    values: [10]
+    values: [20]

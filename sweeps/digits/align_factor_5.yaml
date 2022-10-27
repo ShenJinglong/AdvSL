@@ -2,27 +2,22 @@ program: main.py
 project: AdvSL
 entity: advsl
 method: grid
-name: digits_shot_vgg_20
+name: digits_align_factor_5
 parameters:
   dataset_name:
     values: [digits]
   domain:
-    values: [[
-              "MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M",
-              "MNIST-blur", "SVHN-blur", "USPS-blur", "SynthDigits-blur", "MNIST_M-blur",
-              "MNIST-noise", "SVHN-noise", "USPS-noise", "SynthDigits-noise", "MNIST_M-noise",
-              "MNIST-bright", "SVHN-bright", "USPS-bright", "SynthDigits-bright", "MNIST_M-bright"
-            ]]
+    values: [["MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M"]]
   model_type:
-    values: [vgg16]
+    values: [resnet18]
   disc_type:
-    values: [mul, anchor, none]
+    values: [mul]
   aggregate:
     values: [False]
   adv_lr:
     values: [0.01]
   ratio_disc:
-    values: [25]
+    values: [15, 20, 25, 30, 35]
   sl_lr:
     values: [0.01]
   disc_mode:
