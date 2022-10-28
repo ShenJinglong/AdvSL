@@ -37,4 +37,4 @@ parameters:
   target_domain:
     values: [3]
   test_freq:
-    values: [20]
+    values: [50]
