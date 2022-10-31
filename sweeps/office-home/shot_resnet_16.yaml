@@ -32,7 +32,7 @@ parameters:
   percent:
     values: [1]
   batch_size:
-    values: [64]
+    values: [32]
   global_round:
     values: [400]
   local_epoch:
