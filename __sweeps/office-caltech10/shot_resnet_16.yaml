@@ -1,0 +1,44 @@
+program: main.py
+project: AdvSL_review
+entity: advsl
+method: grid
+name: office_caltech10_shot_resnet_16
+parameters:
+  dataset_name:
+    values: [office-caltech10]
+  domain:
+    values: [["caltech", "dslr", "webcam", "amazon",
+              "caltech-blur", "dslr-blur", "webcam-blur", "amazon-blur",
+              "caltech-noise", "dslr-noise", "webcam-noise", "amazon-noise",
+              "caltech-bright", "dslr-bright", "webcam-bright", "amazon-bright"
+            ]]
+  model_type:
+    values: [resnet18]
+  disc_type:
+    values: [mul, anchor, none]
+  aggregate:
+    values: [False]
+  adv_lr:
+    values: [0.01]
+  ratio_disc:
+    values: [25]
+  sl_lr:
+    values: [0.01]
+  disc_mode:
+    values: [gr]
+  cut_point:
+    values: [4]
+  percent:
+    values: [1]
+  batch_size:
+    values: [32]
+  global_round:
+    values: [2000]
+  local_epoch:
+    values: [2]
+  k:
+    values: [0.25]
+  target_domain:
+    values: [3]
+  test_freq:
+    values: [100]
