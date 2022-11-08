@@ -5,9 +5,7 @@ import wandb
 import torch
 import logging
 import torchvision
-import numpy as np
 
-from sklearn.manifold import TSNE
 from utils.data_utils import DigitsDataset
 from utils.model_utils import construct_model, eval_model_with_mutlitest, ratio_model_grad
 from utils.hardware_utils import get_free_gpu
@@ -28,7 +26,8 @@ wandb.init(
 )
 config = wandb.config
 
-DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
+# DEVICE = f"cuda:{get_free_gpu()}" if torch.cuda.is_available() else "cpu"
+DEVICE = "cpu"
 
 num_clients = 2
 MNIST_M_trainset = DigitsDataset(
@@ -78,18 +77,17 @@ SVHN_testset = DigitsDataset(
     ])
 )
 
+MNIST_M_trainset = torch.utils.data.random_split(MNIST_M_trainset, lengths=[1024, len(MNIST_M_trainset)-1024])[0]
+MNIST_M_testset = torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, len(MNIST_M_testset)-1024])[0]
+SVHN_trainset = torch.utils.data.random_split(SVHN_trainset, lengths=[1024, len(SVHN_trainset)-1024])[0]
+SVHN_testset = torch.utils.data.random_split(SVHN_testset, lengths=[1024, len(SVHN_testset)-1024])[0]
+
 if config.dataset_setting == "IID":
-    trainsets = torch.utils.data.random_split(MNIST_M_trainset, lengths=[1024, 1024, len(MNIST_M_trainset)-2048])[:-1]
-    testsets = torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, 1024, len(MNIST_M_testset)-2048])[:-1]
+    trainsets = torch.utils.data.random_split(torch.utils.data.ConcatDataset([MNIST_M_trainset, SVHN_trainset]), lengths=[1024, 1024])
+    testsets = torch.utils.data.random_split(torch.utils.data.ConcatDataset([MNIST_M_testset, SVHN_testset]), lengths=[1024, 1024])
 elif config.dataset_setting == "Non-IID":
-    trainsets = [
-        *torch.utils.data.random_split(MNIST_M_trainset, lengths=[1024, len(MNIST_M_trainset)-1024])[:-1],
-        *torch.utils.data.random_split(SVHN_trainset, lengths=[1024, len(SVHN_trainset)-1024])[:-1],
-    ]
-    testsets = [
-        *torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, len(MNIST_M_testset)-1024])[:-1],
-        *torch.utils.data.random_split(SVHN_testset, lengths=[1024, len(SVHN_testset)-1024])[:-1],
-    ]
+    trainsets = [MNIST_M_trainset, SVHN_trainset]
+    testsets = [MNIST_M_testset, SVHN_testset]
 else:
     raise ValueError()
 

@@ -34,11 +34,11 @@ SVHN_testset = DigitsDataset(
     ])
 )
 
-IID_testsets = torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, 1024, len(MNIST_M_testset)-2048])[:-1]
-NonIID_testsets = [
-    *torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, len(MNIST_M_testset)-1024])[:-1],
-    *torch.utils.data.random_split(SVHN_testset, lengths=[1024, len(SVHN_testset)-1024])[:-1],
-]
+MNIST_M_testset = torch.utils.data.random_split(MNIST_M_testset, lengths=[1024, len(MNIST_M_testset)-1024])[0]
+SVHN_testset = torch.utils.data.random_split(SVHN_testset, lengths=[1024, len(SVHN_testset)-1024])[0]
+
+IID_testsets = torch.utils.data.random_split(torch.utils.data.ConcatDataset([MNIST_M_testset, SVHN_testset]), lengths=[1024, 1024])
+NonIID_testsets = [MNIST_M_testset, SVHN_testset]
 
 IID_testloaders = [torch.utils.data.DataLoader(
     testset,
