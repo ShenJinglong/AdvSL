@@ -1,0 +1,8 @@
+program: motivation.py
+project: AdvSL
+entity: advsl
+method: grid
+name: motivation
+parameters:
+  dataset_setting:
+    values: [IID, Non-IID]

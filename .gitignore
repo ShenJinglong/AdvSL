@@ -137,3 +137,4 @@ GAN.py
 *.out
 test.py
 logs/
+saved_models/
