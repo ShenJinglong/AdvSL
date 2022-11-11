@@ -8,7 +8,7 @@ from sklearn.manifold import TSNE
 
 from utils.data_utils import DigitsDataset
 
-plt.style.use("ggplot")
+plt.style.use("seaborn")
 
 MNIST_M_testset = DigitsDataset(
     root_path=os.path.join(os.path.abspath(os.environ.get("ADVSL_DATASET_PATH")), "digits"),
@@ -83,10 +83,12 @@ IID_client_features = TSNE(
 IID_client_labels = np.concatenate([IID_client0_labels, IID_client1_labels], axis=0)
 
 plt.figure(1)
-plt.scatter(IID_client_features[:1024, 0], IID_client_features[:1024, 1], s=14, c=IID_client_labels[:1024], marker="^")
-plt.scatter(IID_client_features[1024:, 0], IID_client_features[1024:, 1], s=14, c=IID_client_labels[1024:], marker="o")
+plt.scatter(IID_client_features[:1024, 0], IID_client_features[:1024, 1], s=24, c=IID_client_labels[:1024], marker="^", cmap="viridis")
+plt.scatter(IID_client_features[1024:, 0], IID_client_features[1024:, 1], s=20, c=IID_client_labels[1024:], marker="o", cmap="viridis")
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.tight_layout()
-plt.savefig("/home/sjinglong/Desktop/motivation_iid.pdf")
+plt.savefig("/home/sjinglong/Desktop/motivation_iid_.pdf")
 
 NonIID_client0_features = []
 NonIID_client0_labels = []
@@ -117,9 +119,11 @@ NonIID_client_features = TSNE(
 NonIID_client_labels = np.concatenate([NonIID_client0_labels, NonIID_client1_labels], axis=0)
 
 plt.figure(2)
-plt.scatter(NonIID_client_features[:1024, 0], NonIID_client_features[:1024, 1], s=14, c=NonIID_client_labels[:1024], marker="^")
-plt.scatter(NonIID_client_features[1024:, 0], NonIID_client_features[1024:, 1], s=14, c=NonIID_client_labels[1024:], marker="o")
+plt.scatter(NonIID_client_features[:1024, 0], NonIID_client_features[:1024, 1], s=24, c=NonIID_client_labels[:1024], marker="^", cmap="viridis")
+plt.scatter(NonIID_client_features[1024:, 0], NonIID_client_features[1024:, 1], s=20, c=NonIID_client_labels[1024:], marker="o", cmap="viridis")
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.tight_layout()
-plt.savefig("/home/sjinglong/Desktop/motivation_noniid.pdf")
+plt.savefig("/home/sjinglong/Desktop/motivation_noniid_.pdf")
 plt.show()
 

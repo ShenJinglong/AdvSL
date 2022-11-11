@@ -32,6 +32,8 @@ class DigitsDataset(torch.utils.data.Dataset):
         self.channels = channels
         self.labels = self.labels.astype(np.long).squeeze()
 
+        print(self.images.shape[0])
+
     def __len__(self):
         return self.images.shape[0]
 
@@ -69,6 +71,8 @@ class OfficeCaltech10Dataset(torch.utils.data.Dataset):
                 filenames = filenames[int(len(filenames)*0.9):]
                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
                 self.__labels.extend([i]*len(filenames))
+        
+        print(len(self.__image_names))
 
     def __len__(self):
         return len(self.__image_names)
@@ -98,6 +102,8 @@ class OfficeHomeDataset(torch.utils.data.Dataset):
                 filenames = filenames[int(len(filenames)*0.9):]
                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
                 self.__labels.extend([i]*len(filenames))
+        
+        print(len(self.__image_names))
     
     def __len__(self):
         return len(self.__image_names)
