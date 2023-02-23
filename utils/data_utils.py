@@ -30,7 +30,7 @@ class DigitsDataset(torch.utils.data.Dataset):
 
         self.transform = transform
         self.channels = channels
-        self.labels = self.labels.astype(np.long).squeeze()
+        self.labels = self.labels.astype(np.int64).squeeze()
 
         print(self.images.shape[0])
 
@@ -64,7 +64,12 @@ class OfficeCaltech10Dataset(torch.utils.data.Dataset):
             filenames = os.listdir(os.path.join(root_path, domain, class_name))
             if train:
                 filenames = filenames[:int(len(filenames)*0.9)]
-                filenames = filenames[:int(len(filenames)*percent)]
+                if percent <= 1 and percent > 0:
+                    filenames = filenames[:int(len(filenames)*percent)]
+                elif percent > 1:
+                    filenames = filenames[:percent]
+                else:
+                    raise ValueError("dataset percent error.")
                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
                 self.__labels.extend([i]*len(filenames))
             else:
@@ -95,7 +100,12 @@ class OfficeHomeDataset(torch.utils.data.Dataset):
             filenames = os.listdir(os.path.join(root_path, domain, class_name))
             if train:
                 filenames = filenames[:int(len(filenames)*0.9)]
-                filenames = filenames[:int(len(filenames)*percent)]
+                if percent <= 1 and percent > 0:
+                    filenames = filenames[:int(len(filenames)*percent)]
+                elif percent > 1:
+                    filenames = filenames[:percent]
+                else:
+                    raise ValueError("dataset percent error.")
                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
                 self.__labels.extend([i]*len(filenames))
             else:
@@ -114,34 +124,71 @@ class OfficeHomeDataset(torch.utils.data.Dataset):
                 img = self.__transform(img)
             return img, self.__labels[idx]
 
+# class DomainNetDataset(torch.utils.data.Dataset):
+#     def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
+#         super().__init__()
+#         self.__image_names, self.__labels = [], []
+#         self.__transform = transform
+#         self.__root_path = root_path
+#         self.__domain = domain
+#         classes = os.listdir(os.path.join(root_path, domain, domain))
+#         for i, class_name in enumerate(classes):
+#             filenames = os.listdir(os.path.join(root_path, domain, domain, class_name))
+#             if train:
+#                 filenames = filenames[:int(len(filenames)*0.9)]
+#                 if percent <= 1 and percent > 0:
+#                     filenames = filenames[:int(len(filenames)*percent)]
+#                 elif percent > 1:
+#                     filenames = filenames[:percent]
+#                 else:
+#                     raise ValueError("dataset percent error.")
+#                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+#                 self.__labels.extend([i]*len(filenames))
+#             else:
+#                 filenames = filenames[int(len(filenames)*0.9):]
+#                 self.__image_names.extend([class_name + '/' + filename for filename in filenames])
+#                 self.__labels.extend([i]*len(filenames))
+
+#         print(len(self.__image_names))
+
+#     def __len__(self):
+#         return len(self.__image_names)
+
+#     def __getitem__(self, idx):
+#         with Image.open(os.path.join(self.__root_path, self.__domain, self.__domain, self.__image_names[idx])) as img:
+#             if self.__transform is not None:
+#                 img = self.__transform(img)
+#             return img, self.__labels[idx]
+
+
+
 class DomainNetDataset(torch.utils.data.Dataset):
     def __init__(self, root_path, domain, channels, percent=1, train=True, transform=None) -> None:
         super().__init__()
-        self.__image_names, self.__labels = [], []
-        self.__transform = transform
-        self.__root_path = root_path
-        self.__domain = domain
-        classes = os.listdir(os.path.join(root_path, domain, domain))
-        for i, class_name in enumerate(classes):
-            filenames = os.listdir(os.path.join(root_path, domain, domain, class_name))
-            if train:
-                filenames = filenames[:int(len(filenames)*0.9)]
-                filenames = filenames[:int(len(filenames)*percent)]
-                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
-                self.__labels.extend([i]*len(filenames))
-            else:
-                filenames = filenames[int(len(filenames)*0.9):]
-                self.__image_names.extend([class_name + '/' + filename for filename in filenames])
-                self.__labels.extend([i]*len(filenames))
+        if train:
+            dataset = torch.load(os.path.join(root_path, domain, f"domain-net_{domain}_train.pth"))
+            self.imgs = dataset['imgs']
+            self.labels = dataset['labels']
+        else:
+            dataset = torch.load(os.path.join(root_path, domain, f"domain-net_{domain}_test.pth"))
+            self.imgs = dataset['imgs']
+            self.labels = dataset['labels']
+
+        self.transform = transform
+
+        print(self.imgs.shape[0])
 
     def __len__(self):
-        return len(self.__image_names)
+        return self.imgs.shape[0]
 
     def __getitem__(self, idx):
-        with Image.open(os.path.join(self.__root_path, self.__domain, self.__domain, self.__image_names[idx])) as img:
-            if self.__transform is not None:
-                img = self.__transform(img)
-            return img, self.__labels[idx]
+        image = self.imgs[idx]
+        label = self.labels[idx]
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, label
 
 class DatasetManager():
     def __init__(self,
@@ -181,11 +228,7 @@ class DatasetManager():
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
         domain_net_transform = [
-            torchvision.transforms.Resize((64, 64)),
-            torchvision.transforms.Lambda(lambda img: torchvision.transforms.Grayscale(num_output_channels=3)(img) if img.mode == 'L' else img),
-            torchvision.transforms.PILToTensor(),
-            torchvision.transforms.ConvertImageDtype(torch.float),
-            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            
         ]
 
         self.__datasets = {
@@ -350,3 +393,11 @@ def seed_torch(seed=1029):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+
+
+if __name__ == "__main__":
+    dm = DatasetManager("/home/sjinglong/data/datasets/personal/advsl/", "domain-net", 40, 32)
+    # dm.get_trainloaders(["MNIST", "SVHN", "USPS", "SynthDigits", "MNIST_M"]) # 0.5
+    # dm.get_trainloaders(["amazon", "caltech", "dslr", "webcam"]) # 15
+    # dm.get_trainloaders(["Art", "Clipart", "Product", "RealWorld"]) # 30
+    dm.get_trainloaders(["clipart", "real", "sketch", "quickdraw", "infograph", "painting"]) # 40

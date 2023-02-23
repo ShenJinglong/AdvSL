@@ -140,6 +140,27 @@ class ClusterUnionMultiout:
                 logging.info("discriminator updated ...")
             self.__update_counter = 0
 
+class ClusterUnionAverage:
+    def __init__(self,
+        mode: str, # 鉴别器工作的模式
+        k: float, # 鉴别器相对更新频率
+        fm_size: torch.Size, # client输出的feature map的大小，也是鉴别器输入的大小
+        client_num: int, # 客户端数量，用来设置鉴别器的输出size
+        lr: float, # 鉴别器的learning rate
+        device: str # 训练device
+    ) -> None:
+        pass
+
+    def update(self,
+        fms: List[torch.Tensor]
+    ) -> None:
+        pass
+
+    def __update_gr(self,
+        fms: List[torch.Tensor]
+    ) -> None:
+        pass
+
 if __name__ == "__main__":
     dummy_union = ClusterUnionAnchor(1, torch.Size((8,)), 5, 0.25, "cpu")
     dummy_inputs = [torch.rand((2,8)) for _ in range(5)]
